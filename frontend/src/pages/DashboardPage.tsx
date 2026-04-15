@@ -12,7 +12,7 @@ import {
 } from 'recharts'
 import { api } from '../api/client'
 import { useAuth } from '../auth/AuthContext'
-import type { Booking, DashboardStats, Ticket as TicketT } from '../types'
+import type {DashboardStats, Ticket as TicketT } from '../types'
 import clsx from 'clsx'
 
 export function DashboardPage() {
@@ -24,10 +24,7 @@ export function DashboardPage() {
     queryFn: async () => (await api.get<DashboardStats>('/api/v1/admin/dashboard')).data,
   })
 
-  const bookings = useQuery({
-    queryKey: ['bookings'],
-    queryFn: async () => (await api.get<Booking[]>('/api/v1/bookings')).data,
-  })
+
 
   const tickets = useQuery({
     queryKey: ['tickets'],
@@ -108,19 +105,12 @@ export function DashboardPage() {
     )
   }
 
-  const pendingMine = bookings.data?.filter((b) => b.status === 'PENDING').length ?? 0
   const openMine =
     tickets.data?.filter((t) => t.status === 'OPEN' || t.status === 'IN_PROGRESS').length ?? 0
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
       <div className="grid gap-6 sm:grid-cols-2">
-        <StatCard
-          title="My Pending Bookings"
-          value={pendingMine}
-          icon={<CalendarClock className="h-5 w-5" />}
-          variant="teal"
-        />
         <StatCard title="Tickets in Progress" value={openMine} icon={<Ticket className="h-5 w-5" />} variant="orange" />
       </div>
     </div>
