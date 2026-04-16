@@ -7,7 +7,46 @@ export interface User {
   role: Role
 }
 
+export type FacilityType = 'LECTURE_HALL' | 'LAB' | 'MEETING_ROOM' | 'EQUIPMENT'
+export type FacilityStatus = 'ACTIVE' | 'OUT_OF_SERVICE'
 
+export interface Facility {
+  id: number
+  name: string
+  resourceType: FacilityType
+  capacity: number
+  location: string
+  availabilityWindow: string | null
+  status: FacilityStatus
+  description: string | null
+  currentlyAvailable: boolean | null
+  images: string[]
+}
+
+
+
+export type TicketStatus = 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED' | 'REJECTED'
+export type TicketPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
+
+export interface Ticket {
+  id: number
+  reporterId: number
+  reporterEmail: string
+  facilityId: number | null
+  facilityName: string | null
+  category: string
+  description: string
+  priority: TicketPriority
+  contactEmail: string
+  status: TicketStatus
+  assignedTechnicianId: number | null
+  assignedTechnicianEmail: string | null
+  rejectReason: string | null
+  createdAt: string
+  updatedAt: string
+  attachments: { id: number; storedFilename: string; originalFilename: string; contentType: string }[]
+  commentCount: number
+}
 
 export interface DashboardStats {
   pendingBookings: number

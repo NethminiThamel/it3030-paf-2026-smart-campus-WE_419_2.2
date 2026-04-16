@@ -8,6 +8,8 @@ import { VerifyPage } from './pages/VerifyPage'
 import { LoginGuidePage } from './pages/LoginGuidePage'
 import { AppShell } from './components/AppShell'
 import { DashboardPage } from './pages/DashboardPage'
+import { FacilitiesPage } from './pages/FacilitiesPage'
+
 
 
 function Protected({ children }: { children: ReactNode }) {
@@ -43,6 +45,14 @@ export default function App() {
         element={
           <Protected>
             <DashboardPage />
+          </Protected>
+        }
+      />
+      <Route
+        path="/app/facilities"
+        element={
+          <Protected>
+            <FacilitiesPage />
           </Protected>
         }
       />
