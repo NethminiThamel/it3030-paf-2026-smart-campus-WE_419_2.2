@@ -61,7 +61,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 	@Query(
 			"""
 			select f.id, f.name, count(b) from Booking b join b.facility f
-			where b.status = com.smartcampus.hub.domain.BookingStatus.APPROVED
+			where b.status = backend.domain.BookingStatus.APPROVED
 			group by f.id, f.name
 			order by count(b) desc
 			""")
