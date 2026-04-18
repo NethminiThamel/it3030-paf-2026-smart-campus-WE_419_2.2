@@ -68,7 +68,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="mb-6 flex flex-col items-center text-center">
             <div className="relative mb-3">
               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#1e293b] ring-4 ring-slate-800/50 text-xl font-bold text-white uppercase tracking-tighter shadow-xl">
-                {user.fullName.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                {(user.fullName || user.email || 'User').split(' ').map(n => n[0]).join('').slice(0, 2)}
               </div>
               <div className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-[#101924] bg-emerald-500 shadow-sm" />
             </div>
