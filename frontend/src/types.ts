@@ -23,7 +23,17 @@ export interface Facility {
   images: string[]
 }
 
+export type BookingStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED'
 
+export interface Booking {
+  id: number
+  facilityName: string
+  purpose: string
+  startTime: string
+  endTime: string
+  status: BookingStatus
+  qrToken?: string | null
+}
 
 export type TicketStatus = 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED' | 'REJECTED'
 export type TicketPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'

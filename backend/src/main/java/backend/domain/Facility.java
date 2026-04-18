@@ -53,4 +53,12 @@ public class Facility {
 
 	@Column(name = "created_at", nullable = false)
 	private Instant createdAt;
+
+	@Builder.Default
+	@jakarta.persistence.OneToMany(mappedBy = "facility", cascade = jakarta.persistence.CascadeType.ALL, orphanRemoval = true)
+	private java.util.List<FacilityImage> images = new java.util.ArrayList<>();
+
+	@Builder.Default
+	@jakarta.persistence.OneToMany(mappedBy = "facility", cascade = jakarta.persistence.CascadeType.ALL, orphanRemoval = true)
+	private java.util.List<Booking> bookings = new java.util.ArrayList<>();
 }

@@ -28,7 +28,12 @@ public class AdminController {
 	private final UserAdminService userAdminService;
 	private final CurrentUserService currentUserService;
 
-	
+	@GetMapping("/dashboard")
+	public DashboardStatsDto dashboard(Authentication authentication) {
+		currentUserService.requireUser(authentication);
+		return dashboardService.getDashboardStats();
+	}
+
 
 	@GetMapping("/technicians")
 	public List<UserDto> technicians(Authentication authentication) {

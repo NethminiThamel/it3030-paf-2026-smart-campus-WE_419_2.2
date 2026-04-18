@@ -65,6 +65,11 @@ export function FacilitiesPage() {
     description: form.description.trim() || null,
   })
 
+  const getFacilityImageUrl = (imagePath: string) =>
+    imagePath.startsWith('http')
+      ? imagePath
+      : `${import.meta.env.VITE_API_BASE || ''}${imagePath}`
+
   const createMut = useMutation({
     mutationFn: async () => (await api.post<Facility>('/api/v1/facilities', payloadFromForm())).data,
   })
@@ -330,7 +335,7 @@ export function FacilitiesPage() {
           <div key={f.id} className="card border-slate-100 transition-all hover:shadow-xl hover:shadow-black/5">
             {f.images.length > 0 && (
               <img
-                src={f.images[0]}
+                src={getFacilityImageUrl(f.images[0])}
                 alt={`${f.name} image`}
                 className="mb-2 h-32 w-full rounded-md object-cover"
               />

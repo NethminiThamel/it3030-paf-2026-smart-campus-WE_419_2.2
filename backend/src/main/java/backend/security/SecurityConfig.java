@@ -69,9 +69,10 @@ public class SecurityConfig {
 
 	@Bean
 	CorsConfigurationSource corsConfigurationSource(
-			@Value("${app.cors.allowed-origins:http://localhost:8080,http://localhost:9094}") String origins) {
+			@Value("${app.cors.allowed-origins:http://localhost:8080,http://localhost:9094,http://localhost:5173}") String origins) {
 		CorsConfiguration config = new CorsConfiguration();
 		config.setAllowedOrigins(List.of(origins.split(",")));
+		config.setAllowedOriginPatterns(List.of("http://localhost:*", "http://127.0.0.1:*"));
 		config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 		config.setAllowedHeaders(List.of("*"));
 		config.setAllowCredentials(true);

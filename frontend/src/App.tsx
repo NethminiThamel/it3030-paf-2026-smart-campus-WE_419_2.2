@@ -1,16 +1,15 @@
 import type { ReactNode } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
+import { AppShell } from './components/AppShell'
 import { useAuth } from './auth/AuthContext'
 import { AdminPage } from './pages/AdminPage'
-import { LoginPage } from './pages/LoginPage'
-import { RegisterPage } from './pages/RegisterPage'
-import { VerifyPage } from './pages/VerifyPage'
-import { LoginGuidePage } from './pages/LoginGuidePage'
-import { AppShell } from './components/AppShell'
+import { BookingsPage } from './pages/BookingsPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { FacilitiesPage } from './pages/FacilitiesPage'
-
-
+import { LoginPage } from './pages/LoginPage'
+import { RegisterPage } from './pages/RegisterPage'
+import { LoginGuidePage } from './pages/LoginGuidePage'
+import { VerifyPage } from './pages/VerifyPage'
 
 function Protected({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth()
@@ -56,10 +55,26 @@ export default function App() {
           </Protected>
         }
       />
-      
-      
+      <Route
+        path="/app/bookings"
+        element={
+          <Protected>
+            <BookingsPage />
+          </Protected>
+        }
+      />
       
     
+      <Route
+        path="/app/admin"
+        element={
+          <Protected>
+            <AdminOnly>
+              <AdminPage />
+            </AdminOnly>
+          </Protected>
+        }
+      />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )

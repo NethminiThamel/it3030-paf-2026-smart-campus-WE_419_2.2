@@ -1,6 +1,7 @@
 package backend.security;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.source.JWKSource;
@@ -11,6 +12,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.http.client.BufferingClientHttpRequestFactory;
+import org.springframework.http.client.ClientHttpRequestFactory;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
@@ -21,14 +25,32 @@ import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
+import org.springframework.web.client.RestTemplate;
 
 @Configuration
 public class JwtConfig {
 
+	@Bean
+	RestTemplate restTemplate() {
+		return new RestTemplate(clientHttpRequestFactory());
+	}
+
+	@Bean
+	ClientHttpRequestFactory clientHttpRequestFactory() {
+		SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+		factory.setConnectTimeout(5000); // 5 seconds
+		factory.setReadTimeout(5000); // 5 seconds
+		return new BufferingClientHttpRequestFactory(factory);
+	}
+
 	@Bean(name = "googleJwtDecoder")
-	JwtDecoder googleJwtDecoder(@Value("${GOOGLE_CLIENT_ID}") String clientId) {
+	JwtDecoder googleJwtDecoder(@Value("${GOOGLE_CLIENT_ID}") String clientId,
+			@Qualifier("restTemplate") RestTemplate restTemplate) {
 		NimbusJwtDecoder decoder =
-				NimbusJwtDecoder.withJwkSetUri("https://www.googleapis.com/oauth2/v3/certs").build();
+				NimbusJwtDecoder.withJwkSetUri("https://www.googleapis.com/oauth2/v3/certs")
+						.restOperations(restTemplate)
+						.build();
+		
 		OAuth2TokenValidator<Jwt> withIssuer =
 				JwtValidators.createDefaultWithIssuer("https://accounts.google.com");
 		OAuth2TokenValidator<Jwt> audience =

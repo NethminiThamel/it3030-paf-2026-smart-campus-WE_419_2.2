@@ -1,8 +1,8 @@
-package com.smartcampus.hub.controller;
+package backend.controller;
 
-import com.smartcampus.hub.dto.PublicBookingPassView;
-import com.smartcampus.hub.exception.ApiException;
-import com.smartcampus.hub.service.PublicBookingService;
+import backend.dto.PublicBookingPassView;
+import backend.exception.ApiException;
+import backend.service.PublicBookingService;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;

@@ -1,4 +1,3 @@
-import { Building2, ShieldCheck } from 'lucide-react'
 import { useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { api, setToken } from '../api/client'
