@@ -1,17 +1,22 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { format } from 'date-fns'
-import { Plus } from 'lucide-react'
+import { Plus, Ticket as TicketIcon } from 'lucide-react'
+
 import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../api/client'
 import { useAuth } from '../auth/AuthContext'
+import { useToast } from '../components/Toast'
 import type { Facility, Ticket, TicketPriority } from '../types'
+
 import clsx from 'clsx'
 
 export function TicketsPage() {
   const { user } = useAuth()
   const qc = useQueryClient()
   const [open, setOpen] = useState(false)
+  const { toast } = useToast()
+
   const [fileInputKey, setFileInputKey] = useState(0)
   const [facilityId, setFacilityId] = useState<number | ''>('')
   const [category, setCategory] = useState('AV / IT')
@@ -61,10 +66,16 @@ export function TicketsPage() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['tickets'] })
+      toast('Ticket submitted successfully!', 'success')
       setOpen(false)
+
       setDescription('')
       setFiles([])
       setFileInputKey((k) => k + 1)
+    },
+    onError: (err: any) => {
+      const msg = err.response?.data?.message || 'Failed to submit ticket. Please try again.'
+      toast(msg, 'error')
     },
   })
 
@@ -190,7 +201,29 @@ export function TicketsPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
+            {tickets.isLoading && (
+              <tr>
+                <td colSpan={7} className="py-12 text-center text-slate-400 font-medium animate-pulse">
+                  Loading tickets...
+                </td>
+              </tr>
+            )}
+            {!tickets.isLoading && tickets.data?.length === 0 && (
+              <tr>
+                <td colSpan={7} className="py-16 text-center">
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-slate-300 shadow-sm ring-1 ring-slate-100">
+                       <TicketIcon className="h-6 w-6" />
+                    </div>
+
+                    <p className="text-sm font-bold text-slate-500">No tickets found</p>
+                    <p className="text-xs text-slate-400">Click “New ticket” to report an issue.</p>
+                  </div>
+                </td>
+              </tr>
+            )}
             {tickets.data?.map((t) => (
+
               <tr key={t.id} className="text-slate-600">
                 <td className="py-4">
                   <Link className="font-black text-teal-600 hover:underline" to={`/app/tickets/${t.id}`}>

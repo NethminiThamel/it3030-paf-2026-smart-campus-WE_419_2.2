@@ -44,6 +44,10 @@ public class AppUser {
 	@Column(nullable = false)
 	private Role role;
 
+	@Column(name = "profile_picture")
+	private String profilePicture;
+
 	@Column(name = "created_at", nullable = false)
 	private Instant createdAt;
+
 }

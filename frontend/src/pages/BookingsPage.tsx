@@ -5,7 +5,9 @@ import { QRCodeSVG } from 'qrcode.react'
 import { useMemo, useState } from 'react'
 import { api } from '../api/client'
 import { useAuth } from '../auth/AuthContext'
+import { useToast } from '../components/Toast'
 import type { Booking, BookingStatus, Facility } from '../types'
+
 import clsx from 'clsx'
 
 type BookingQrResponse = {
@@ -17,7 +19,9 @@ type BookingQrResponse = {
 
 export function BookingsPage() {
   const { user } = useAuth()
+  const { toast } = useToast()
   const qc = useQueryClient()
+
   const [facilityId, setFacilityId] = useState<number | ''>('')
   const [start, setStart] = useState('')
   const [end, setEnd] = useState('')
@@ -45,8 +49,14 @@ export function BookingsPage() {
           expectedAttendees: Number(attendees),
         })
       ).data,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['bookings'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['bookings'] })
+      toast('Booking request submitted!', 'success')
+      setPurpose('')
+      setFacilityId('')
+    },
   })
+
 
   const decide = useMutation({
     mutationFn: async (p: { id: number; decision: BookingStatus; reason?: string }) =>
@@ -56,13 +66,21 @@ export function BookingsPage() {
           reason: p.reason ?? null,
         })
       ).data,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['bookings'] }),
+    onSuccess: (_, variables) => {
+      qc.invalidateQueries({ queryKey: ['bookings'] })
+      toast(`Booking ${variables.decision.toLowerCase()}!`, 'info')
+    },
   })
+
 
   const cancel = useMutation({
     mutationFn: async (id: number) => api.patch(`/api/v1/bookings/${id}/cancel`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['bookings'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['bookings'] })
+      toast('Booking cancelled.', 'info')
+    },
   })
+
 
   const [qrFor, setQrFor] = useState<number | null>(null)
 

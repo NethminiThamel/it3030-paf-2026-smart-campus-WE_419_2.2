@@ -66,4 +66,33 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 			order by count(b) desc
 			""")
 	List<Object[]> topFacilitiesByApprovedBookings(Pageable pageable);
+
+	@Query(value = """
+			SELECT HOUR(start_time) as h, COUNT(*) as c
+			FROM bookings
+			WHERE status = 'APPROVED'
+			GROUP BY h
+			ORDER BY c DESC
+			""", nativeQuery = true)
+	List<Object[]> peakBookingHours();
+
+	@Query(value = """
+			SELECT DAYNAME(start_time) as d, COUNT(*) as c
+			FROM bookings
+			WHERE status = 'APPROVED'
+			GROUP BY d
+			ORDER BY c DESC
+			""", nativeQuery = true)
+	List<Object[]> peakBookingDays();
+
+	@Query(value = """
+			SELECT DATE(start_time) as d, COUNT(*) as c
+			FROM bookings
+			WHERE status IN ('APPROVED', 'PENDING')
+			AND start_time >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+			GROUP BY d
+			ORDER BY d ASC
+			""", nativeQuery = true)
+	List<Object[]> bookingTrendLast7Days();
 }
+

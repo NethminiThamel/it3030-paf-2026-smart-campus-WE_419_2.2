@@ -178,6 +178,9 @@ public class TicketService {
 				|| newStatus == TicketStatus.RESOLVED
 				|| newStatus == TicketStatus.CLOSED) {
 			t.setStatus(newStatus);
+			if (note != null) {
+				t.setResolutionNote(note);
+			}
 			addHistory(t, actor, "STATUS", newStatus.name() + (note != null ? (": " + note) : ""));
 			notifyReporter(t, "TICKET_UPDATE", "Ticket updated", "Status: " + newStatus.name());
 		}
@@ -358,6 +361,7 @@ public class TicketService {
 				t.getAssignedTechnician() != null ? t.getAssignedTechnician().getId() : null,
 				t.getAssignedTechnician() != null ? t.getAssignedTechnician().getEmail() : null,
 				t.getRejectReason(),
+				t.getResolutionNote(),
 				t.getCreatedAt(),
 				t.getUpdatedAt(),
 				atts,

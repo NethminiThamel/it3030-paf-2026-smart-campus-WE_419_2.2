@@ -19,7 +19,9 @@ public record TicketDto(
 		Long assignedTechnicianId,
 		String assignedTechnicianEmail,
 		String rejectReason,
+		String resolutionNote,
 		Instant createdAt,
+
 		Instant updatedAt,
 		List<TicketAttachmentDto> attachments,
 		int commentCount) {
