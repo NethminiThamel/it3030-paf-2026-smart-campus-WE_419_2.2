@@ -211,7 +211,20 @@ export function TicketDetailPage() {
                 <span className="text-slate-900">{t.assignedTechnicianEmail}</span>
               </div>
             )}
+            {t.resolutionNote && (
+              <div className="flex flex-col gap-1 mt-2 col-span-2 bg-emerald-50 p-3 rounded-xl border border-emerald-100">
+                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Resolution Note</span>
+                <span className="text-sm font-semibold text-slate-800">{t.resolutionNote}</span>
+              </div>
+            )}
+            {t.rejectReason && (
+              <div className="flex flex-col gap-1 mt-2 col-span-2 bg-rose-50 p-3 rounded-xl border border-rose-100">
+                <span className="text-[10px] font-black uppercase tracking-widest text-rose-600">Rejection Reason</span>
+                <span className="text-sm font-semibold text-slate-800">{t.rejectReason}</span>
+              </div>
+            )}
           </div>
+
           <div className="mt-8 pt-6 border-t border-slate-100">
             <div className="text-xs font-bold uppercase text-slate-400 tracking-widest mb-4">Evidence & Files</div>
             <ul className="grid gap-4 sm:grid-cols-2">
