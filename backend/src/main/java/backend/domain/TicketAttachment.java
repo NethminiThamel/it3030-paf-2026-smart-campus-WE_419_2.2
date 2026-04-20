@@ -2,11 +2,12 @@ package backend.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.Instant;
 import lombok.AllArgsConstructor;
@@ -16,38 +17,32 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "app_users")
+@Table(name = "ticket_attachments")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AppUser {
+public class TicketAttachment {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@Column(nullable = false, unique = true)
-	private String email;
+	@ManyToOne(fetch = FetchType.LAZY, optional = false)
+	@JoinColumn(name = "ticket_id", nullable = false)
+	private Ticket ticket;
 
-	@Column(name = "full_name", nullable = false)
-	private String fullName;
+	@Column(name = "stored_filename", nullable = false, length = 512)
+	private String storedFilename;
 
-	@Column(name = "google_sub", unique = true)
-	private String googleSub;
+	@Column(name = "original_filename", nullable = false, length = 512)
+	private String originalFilename;
 
-	@Column(name = "password_hash")
-	private String passwordHash;
-
-	@Enumerated(EnumType.STRING)
-	@Column(nullable = false)
-	private Role role;
-
-	@Column(name = "profile_picture")
-	private String profilePicture;
+	@Column(name = "content_type", nullable = false, length = 128)
+	private String contentType;
 
 	@Column(name = "created_at", nullable = false)
 	private Instant createdAt;
-
 }
+

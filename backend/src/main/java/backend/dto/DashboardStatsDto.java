@@ -8,7 +8,9 @@ public record DashboardStatsDto(
 		long totalUsers,
 		long activeFacilities,
 		List<NamedCount> topFacilities,
-		List<BookingTrendPoint> bookingTrend) {
+		List<BookingTrendPoint> bookingTrend,
+		List<NamedCount> peakBookingHours,
+		List<NamedCount> peakBookingDays) {
 
 	public record NamedCount(String name, long count) {}
 

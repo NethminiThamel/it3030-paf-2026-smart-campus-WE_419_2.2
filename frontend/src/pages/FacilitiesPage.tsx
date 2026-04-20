@@ -3,7 +3,9 @@ import { Filter, MapPin, Pencil, Plus, Trash2, Users } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { api } from '../api/client'
 import { useAuth } from '../auth/AuthContext'
+import { useToast } from '../components/Toast'
 import type { Facility, FacilityStatus, FacilityType } from '../types'
+
 import clsx from 'clsx'
 
 const types: FacilityType[] = ['LECTURE_HALL', 'LAB', 'MEETING_ROOM', 'EQUIPMENT']
@@ -20,7 +22,9 @@ const emptyForm = () => ({
 
 export function FacilitiesPage() {
   const { user } = useAuth()
+  const { toast } = useToast()
   const qc = useQueryClient()
+
   const isAdmin = user?.role === 'ADMIN'
 
   const [type, setType] = useState<FacilityType | ''>('')
@@ -83,7 +87,10 @@ export function FacilitiesPage() {
     mutationFn: async (id: number) => {
       await api.delete(`/api/v1/facilities/${id}`)
     },
-    onSuccess: () => invalidateFacilities(),
+    onSuccess: () => {
+      invalidateFacilities()
+      toast('Resource deleted successfully!', 'info')
+    },
   })
 
   const uploadImages = async (facilityId: number, files: File[]) => {
@@ -100,10 +107,12 @@ export function FacilitiesPage() {
         const updated = await updateMut.mutateAsync(editingId)
         const files = imageFiles ? Array.from(imageFiles) : []
         await uploadImages(updated.id, files)
+        toast('Resource updated successfully!', 'success')
       } else {
         const created = await createMut.mutateAsync()
         const files = imageFiles ? Array.from(imageFiles) : []
         await uploadImages(created.id, files)
+        toast('Resource created successfully!', 'success')
       }
 
       invalidateFacilities()
@@ -111,9 +120,13 @@ export function FacilitiesPage() {
       setEditingId(null)
       setForm(emptyForm())
       setImageFiles(null)
+    } catch (err: any) {
+      const msg = err.response?.data?.message || 'Failed to save resource.'
+      toast(msg, 'error')
     } finally {
       setBusy(false)
     }
+
   }
 
   const startEdit = (f: Facility) => {

@@ -10,8 +10,16 @@ import { LoginPage } from './pages/LoginPage'
 import { RegisterPage } from './pages/RegisterPage'
 import { LoginGuidePage } from './pages/LoginGuidePage'
 import { VerifyPage } from './pages/VerifyPage'
+import { NotificationsPage } from './pages/NotificationsPage'
+import { TicketsPage } from './pages/TicketsPage'
+import { TicketDetailPage } from './pages/TicketDetailPage'
+
+
+
+import { ProfilePage } from './pages/ProfilePage'
 
 function Protected({ children }: { children: ReactNode }) {
+
   const { user, loading } = useAuth()
   if (loading) {
     return (
@@ -63,6 +71,23 @@ export default function App() {
           </Protected>
         }
       />
+      <Route
+        path="/app/tickets"
+        element={
+          <Protected>
+            <TicketsPage />
+          </Protected>
+        }
+      />
+      <Route
+        path="/app/tickets/:id"
+        element={
+          <Protected>
+            <TicketDetailPage />
+          </Protected>
+        }
+      />
+
       
     
       <Route
@@ -75,7 +100,25 @@ export default function App() {
           </Protected>
         }
       />
+      <Route
+        path="/app/notifications"
+        element={
+          <Protected>
+            <NotificationsPage />
+          </Protected>
+        }
+      />
+      <Route
+        path="/app/profile"
+        element={
+          <Protected>
+            <ProfilePage />
+          </Protected>
+        }
+      />
       <Route path="*" element={<Navigate to="/" replace />} />
+
+
     </Routes>
   )
 }

@@ -1,6 +1,9 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Inter:wght@300;400;500&display=swap');
 
 @theme {
+  --font-syne: "Syne", sans-serif;
+  --font-inter: "Inter", sans-serif;
   --font-sans: "Outfit", "DM Sans", ui-sans-serif, system-ui, sans-serif;
   --color-side-bg: #101924;
   --color-main-bg: #e2e8f0;
