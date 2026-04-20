@@ -1,98 +1,100 @@
 import { Link } from 'react-router-dom'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Shield, Key, Layout, BookOpen } from 'lucide-react'
 
 export function LoginGuidePage() {
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10 text-slate-300">
-      <Link
-        to="/"
-        className="mb-6 inline-flex items-center gap-2 text-sm text-teal-400 hover:underline"
-      >
-        <ArrowLeft className="h-4 w-4" /> Back to Login
-      </Link>
-      <h1 className="mb-2 text-2xl font-semibold text-white">Login · Roles · Pages Guide</h1>
-      <div className="card mt-6 space-y-6 text-sm leading-relaxed">
-        <section>
-          <h2 className="mb-2 text-lg font-semibold text-teal-200">1. Admin vs User — Shared Login</h2>
-          <p>
-            There is only <strong>one “Continue with Google”</strong> button. There isn't a separate “Admin login” URL or a different password form. 
-            When you select your <strong>Gmail</strong> account, the server automatically assigns a role (<code>ADMIN</code>,{' '} 
-            <code>USER</code>, or <code>TECHNICIAN</code>) to your email.
-          </p>
-          <ul className="mt-2 list-disc space-y-1 pl-5 text-slate-400">
-            <li>
-              If it's your <strong>first time</strong> and your email is in <code>ADMIN_EMAILS</code> (backend env) →{' '}
-              <strong>ADMIN</strong>.
-            </li>
-            <li>Otherwise → typically <strong>USER</strong>.</li>
-            <li>An administrator can change roles later via user management.</li>
-          </ul>
-        </section>
-        <section>
-          <h2 className="mb-2 text-lg font-semibold text-teal-200">2. How to login and access the dashboard?</h2>
-          <ol className="list-decimal space-y-2 pl-5">
-            <li>
-              Backend: <code>mvn spring-boot:run</code> (port <strong>9094</strong>)
-            </li>
-            <li>
-              Frontend: <code>npm run dev</code> (port <strong>5173</strong>)
-            </li>
-            <li>
-              Browser: Visit <code>http://localhost:5173</code> → Click Google button → Select Gmail account.
-            </li>
-            <li>
-              If successful, you will be redirected to <strong>/app</strong> (Overview / Dashboard).
-            </li>
-          </ol>
-          <p className="mt-3 text-amber-200/90">
-            If you are still on the login page: check if the backend is running. Ensure both frontend and backend use the{' '}
-            <strong>same Google Client ID</strong>. Check the browser console for error messages.
-          </p>
-        </section>
-        <section>
-          <h2 className="mb-2 text-lg font-semibold text-teal-200">3. Sidebar — Permission Overview</h2>
-          <table className="w-full border-collapse text-left text-xs sm:text-sm">
-            <thead>
-              <tr className="border-b border-slate-700 text-slate-400">
-                <th className="py-2 pr-2">Page</th>
-                <th className="py-2">USER</th>
-                <th className="py-2">TECHNICIAN</th>
-                <th className="py-2">ADMIN</th>
-              </tr>
-            </thead>
-            <tbody className="text-slate-300">
-              <tr className="border-b border-slate-800/80">
-                <td className="py-2">Overview</td>
-                <td>✓</td>
-                <td>✓</td>
-                <td>✓ (analytics)</td>
-              </tr>
-              <tr className="border-b border-slate-800/80">
-                <td className="py-2">Facilities / Bookings / Tickets / Notifications</td>
-                <td>✓</td>
-                <td>✓</td>
-                <td>✓</td>
-              </tr>
-              <tr>
-                <td className="py-2">Admin (users, roles)</td>
-                <td>—</td>
-                <td>—</td>
-                <td>✓</td>
-              </tr>
-            </tbody>
-          </table>
-        </section>
-        <section>
-          <h2 className="mb-2 text-lg font-semibold text-teal-200">4. How to become an Admin?</h2>
-          <p>
-            In your backend environment or <code>application.properties</code>:{' '}
-            set <code>ADMIN_EMAILS=your@gmail.com</code> (comma-separated). When you login with that Gmail for the{' '}
-            <strong>first time</strong>, you will be granted the ADMIN role. If you are already a USER, another Admin must update your role to ADMIN via the{' '}
-            <strong>Admin → Users</strong> table.
-          </p>
-        </section>
+    <div className="relative flex min-h-full items-center justify-center bg-slate-50 px-4 py-12 overflow-hidden">
+      <div className="absolute -left-20 -top-20 h-80 w-80 rounded-full bg-teal-500/5 blur-[80px]" />
+      <div className="absolute -bottom-20 -right-20 h-80 w-80 rounded-full bg-blue-500/5 blur-[80px]" />
+
+      <div className="relative w-full max-w-[700px]">
+        <div className="mb-6">
+          <Link to="/" className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-400 hover:text-teal-600 transition-colors group">
+            <ArrowLeft size={14} className="transition-transform group-hover:-translate-x-1" />
+            Back to Access
+          </Link>
+        </div>
+
+        <div className="overflow-hidden rounded-[32px] bg-white shadow-2xl shadow-slate-200/60 ring-1 ring-slate-100">
+           <div className="bg-gradient-to-br from-slate-900 to-slate-800 px-8 py-10 text-white">
+              <div className="flex items-center gap-4 mb-2">
+                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-teal-500 shadow-lg shadow-teal-500/20 text-white">
+                    <BookOpen size={22} />
+                 </div>
+                 <div>
+                    <h1 className="text-2xl font-black tracking-tight">System Access Guide</h1>
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Platform roles & configuration</p>
+                 </div>
+              </div>
+           </div>
+
+           <div className="p-8 sm:p-10 space-y-10">
+              {/* Roles */}
+              <section className="space-y-4">
+                 <div className="flex items-center gap-3">
+                    <Shield className="h-5 w-5 text-teal-600" />
+                    <h2 className="text-lg font-black text-slate-900">Authentication & Roles</h2>
+                 </div>
+                 <p className="text-[15px] font-medium text-slate-500 leading-relaxed">
+                    The platform uses organization-wide SSO. When you sign in with Google for the first time, our system automatically assigns you a role.
+                 </p>
+                 <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <li className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                       <p className="text-[10px] font-black uppercase tracking-widest text-teal-600 mb-1">Admin Access</p>
+                       <p className="text-xs font-bold text-slate-600">Emails in the ADMIN_EMAILS global config get full system control instantly.</p>
+                    </li>
+                    <li className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                       <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Standard User</p>
+                       <p className="text-xs font-bold text-slate-600">All other verified users are granted basic facility request and ticket access.</p>
+                    </li>
+                 </ul>
+              </section>
+
+              {/* Dev Info */}
+              <section className="space-y-4">
+                 <div className="flex items-center gap-3">
+                    <Key className="h-5 w-5 text-teal-600" />
+                    <h2 className="text-lg font-black text-slate-900">Developer Quick-start</h2>
+                 </div>
+                 <div className="space-y-3">
+                    <div className="flex items-center justify-between rounded-xl bg-slate-900 px-4 py-3">
+                       <span className="text-xs font-bold text-slate-400">Backend Server</span>
+                       <code className="text-[11px] font-mono text-teal-400">mvn spring-boot:run</code>
+                    </div>
+                    <div className="flex items-center justify-between rounded-xl bg-slate-900 px-4 py-3">
+                       <span className="text-xs font-bold text-slate-400">Frontend App</span>
+                       <code className="text-[11px] font-mono text-teal-400">npm run dev</code>
+                    </div>
+                 </div>
+              </section>
+
+              {/* Permissions */}
+              <section className="space-y-4">
+                 <div className="flex items-center gap-3">
+                    <Layout className="h-5 w-5 text-teal-600" />
+                    <h2 className="text-lg font-black text-slate-900">Core Permissions</h2>
+                 </div>
+                 <div className="overflow-hidden rounded-2xl border border-slate-100">
+                    <table className="w-full text-left text-sm">
+                       <thead className="bg-slate-50">
+                          <tr className="border-b border-slate-100">
+                             <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Module</th>
+                             <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-center">User</th>
+                             <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-teal-600 text-center">Admin</th>
+                          </tr>
+                       </thead>
+                       <tbody className="divide-y divide-slate-50 font-bold text-slate-600">
+                          <tr><td className="px-6 py-3">Dashboard Analytics</td><td className="text-center text-slate-300">—</td><td className="text-center text-teal-500">✓</td></tr>
+                          <tr><td className="px-6 py-3">Facility Requests</td><td className="text-center text-teal-500">✓</td><td className="text-center text-teal-500">✓</td></tr>
+                          <tr><td className="px-6 py-3">User Management</td><td className="text-center text-slate-300">—</td><td className="text-center text-teal-500">✓</td></tr>
+                          <tr><td className="px-6 py-3">Support Tickets</td><td className="text-center text-teal-500">✓</td><td className="text-center text-teal-500">✓</td></tr>
+                       </tbody>
+                    </table>
+                 </div>
+              </section>
+           </div>
+        </div>
       </div>
     </div>
   )
 }
-
