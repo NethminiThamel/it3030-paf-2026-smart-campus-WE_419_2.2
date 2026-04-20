@@ -1,5 +1,5 @@
 import { CheckCircle2, AlertCircle, X, Info } from 'lucide-react'
-import { useState, useEffect, createContext, useContext, useCallback, type ReactNode } from 'react'
+import { useState, createContext, useContext, useCallback, type ReactNode } from 'react'
 import clsx from 'clsx'
 
 type ToastType = 'success' | 'error' | 'info'
