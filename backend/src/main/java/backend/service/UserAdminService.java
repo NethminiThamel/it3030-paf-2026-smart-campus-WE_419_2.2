@@ -34,7 +34,16 @@ public class UserAdminService {
 		return toDto(u);
 	}
 
-	private UserDto toDto(AppUser u) {
-		return new UserDto(u.getId(), u.getEmail(), u.getFullName(), u.getRole());
+	@Transactional
+	public void delete(Long userId) {
+		if (!appUserRepository.existsById(userId)) {
+			throw new ApiException(HttpStatus.NOT_FOUND, "User not found");
+		}
+		appUserRepository.deleteById(userId);
 	}
+
+	private UserDto toDto(AppUser u) {
+		return new UserDto(u.getId(), u.getEmail(), u.getFullName(), u.getRole(), u.getProfilePicture());
+	}
+
 }

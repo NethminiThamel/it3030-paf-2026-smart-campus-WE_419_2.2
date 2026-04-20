@@ -63,7 +63,11 @@ public class Ticket {
 	@Column(name = "reject_reason", length = 1024)
 	private String rejectReason;
 
+	@Column(name = "resolution_note", length = 2048)
+	private String resolutionNote;
+
 	@Column(name = "created_at", nullable = false)
+
 	private Instant createdAt;
 
 	@Column(name = "updated_at", nullable = false)
