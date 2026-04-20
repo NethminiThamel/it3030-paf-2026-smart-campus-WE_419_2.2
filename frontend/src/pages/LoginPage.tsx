@@ -1,24 +1,31 @@
 import { GoogleLogin } from '@react-oauth/google'
-import { ArrowRight } from 'lucide-react'
+import { Eye, EyeOff, AlertCircle } from 'lucide-react'
 import { useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { api, setToken } from '../api/client'
 import { useAuth } from '../auth/AuthContext'
 import { isGoogleClientConfigured } from '../config/oauth'
-import clsx from 'clsx'
+import { useToast } from '../components/Toast'
 
 export function LoginPage() {
   const { user, loading, refresh } = useAuth()
   const navigate = useNavigate()
+  const { toast } = useToast()
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPass, setShowPass] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [showPass, setShowPass] = useState(false)
+
+  // ── Validation Logic ──
+  const [touched, setTouched] = useState({ email: false })
+  const isEmailValid = email.length === 0 || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 
   if (!loading && user) return <Navigate to="/app" replace />
 
   const handleLogin = async () => {
+    if (!email.trim() || !password) return
     setError(null)
     setBusy(true)
     try {
@@ -28,178 +35,135 @@ export function LoginPage() {
       })
       setToken(data.accessToken)
       const { ok, detail } = await refresh()
-      if (ok) navigate('/app', { replace: true })
-      else setError(detail ?? 'Unable to connect to the server.')
-    } catch {
-      setError('Invalid email or password. Please try again.')
+      if (ok) {
+        toast('Welcome back to CampusFlow!', 'success')
+        navigate('/app', { replace: true })
+      } else {
+        setError(detail ?? 'Profile data could not be retrieved.')
+      }
+    } catch (e: any) {
+      setError(e?.response?.data?.message ?? 'Invalid email or password.')
     } finally {
       setBusy(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-[#0d1f1f] flex items-center justify-center px-4 py-10 relative overflow-hidden font-inter">
+    <div className="flex h-full items-center justify-center bg-[#0d1117] px-4 font-sans relative overflow-hidden">
+      <div className="absolute top-0 left-0 w-full h-full opacity-10">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-[#14b8a6] blur-[120px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-600 blur-[120px]" />
+      </div>
 
-      {/* Background orbs */}
-      <div className="absolute w-80 h-80 -top-20 -right-16 bg-[#0e6655] opacity-20 rounded-full blur-[70px] pointer-events-none" />
-      <div className="absolute w-48 h-48 -bottom-12 left-5 bg-[#1a9e80] opacity-10 rounded-full blur-[50px] pointer-events-none" />
+      <div className="flex w-full max-w-[768px] overflow-hidden rounded-[2rem] bg-[#161b22] shadow-2xl shadow-black/50 border border-white/5 relative z-10">
 
-      {/* Card */}
-      <div className="relative w-full max-w-[400px] bg-[#111e1e] border border-[#1a3030] rounded-2xl px-9 py-10 z-10">
+        {/* Left Side: Form */}
+        <div className="flex flex-[1.2] flex-col justify-center p-10 sm:p-14 bg-[#161b22]">
+          <div className="mb-8 text-center sm:text-left">
+            <h1 className="text-3xl font-black tracking-tight text-white">Sign In</h1>
+            <p className="mt-2 text-sm font-medium text-slate-500 uppercase tracking-widest text-[10px]">Operations Hub Access</p>
+          </div>
 
-        {/* Top accent bar */}
-        <div className="absolute top-0 left-10 right-10 h-[2px] bg-[#1a9e80] rounded-b-sm opacity-80" />
-
-        {/* Header row */}
-        <div className="flex items-center justify-between mb-9">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-[#1a9e80] flex items-center justify-center overflow-hidden shrink-0">
-               <img src="/logo.png" alt="CF" className="w-full h-full object-cover opacity-90" />
+          {error && (
+            <div className="mb-6 flex items-center gap-2 rounded-xl bg-red-500/10 p-3 text-xs font-bold text-red-400 border border-red-500/20">
+              <AlertCircle size={14} className="shrink-0" />
+              {error}
             </div>
-            <div>
-              <p className="text-[14px] font-bold text-[#e0f2ee] tracking-tight font-syne">CampusFlow</p>
-              <p className="text-[9px] font-medium tracking-[0.15em] uppercase text-[#2d6a5a] mt-0.5">Operations Hub</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-[5px] h-[5px] rounded-full bg-[#1a9e80]" />
-            <span className="text-[10px] text-[#2d6a5a]">All systems live</span>
-          </div>
-        </div>
-
-        {/* Heading */}
-        <h1 className="text-[32px] font-black text-[#e0f2ee] leading-[1.1] tracking-tight mb-1.5 font-syne">
-          Welcome<br />back.
-        </h1>
-
-        <p className="text-[13px] text-[#3a6a60] font-light mb-8">
-          Sign in to your account to continue
-        </p>
-
-        {/* Error */}
-        {error && (
-          <div className="flex items-start gap-2 bg-red-950/30 border border-red-800/30 rounded-xl px-4 py-3 mb-4">
-            <span className="w-[5px] h-[5px] rounded-full bg-red-400 shrink-0 mt-1" />
-            <p className="text-[12px] font-medium text-red-400">{error}</p>
-          </div>
-        )}
-
-        {/* Email */}
-        <label className="block text-[10px] font-medium tracking-[0.13em] uppercase text-[#2d6a5a] mb-1.5">
-          Email address
-        </label>
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          autoComplete="email"
-          placeholder="name@university.edu"
-          onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-          className="w-full bg-[#0d1a1a] border border-[#1a3030] rounded-xl px-3.5 py-3 text-[13px] text-[#c8e8e0] placeholder-[#1e3a35] outline-none focus:border-[#1a9e80] transition-colors mb-3.5"
-        />
-
-        {/* Password */}
-        <label className="block text-[10px] font-medium tracking-[0.13em] uppercase text-[#2d6a5a] mb-1.5">
-          Password
-        </label>
-        <div className="relative mb-6">
-          <input
-            type={showPass ? 'text' : 'password'}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            autoComplete="current-password"
-            placeholder="••••••••"
-            onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-            className="w-full bg-[#0d1a1a] border border-[#1a3030] rounded-xl px-3.5 py-3 pr-14 text-[13px] text-[#c8e8e0] placeholder-[#1e3a35] outline-none focus:border-[#1a9e80] transition-colors"
-          />
-          <button
-            type="button"
-            onClick={() => setShowPass(!showPass)}
-            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[10px] font-medium tracking-widest uppercase text-[#2d6a5a] hover:text-[#1a9e80] transition-colors"
-          >
-            {showPass ? 'Hide' : 'Show'}
-          </button>
-        </div>
-
-
-        
-
-        {/* Submit */}
-        <button
-          type="button"
-          disabled={busy || !email.trim() || !password}
-          onClick={handleLogin}
-          className={clsx(
-            'w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-[13px] font-bold tracking-wide transition-all',
-            busy || !email.trim() || !password
-              ? 'bg-[#0e3030] text-[#2d5a50] cursor-not-allowed'
-              : 'bg-[#1a9e80] text-white hover:bg-[#158a6e] active:scale-[0.98]'
           )}
-        >
-          {busy ? (
-            <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-          ) : (
-            <>
-              Sign in to Console
-              <ArrowRight size={14} />
-            </>
-          )}
-        </button>
 
-        {/* Register */}
-        <p className="text-center text-[11px] text-[#2d5a50] mt-5">
-          New here?{' '}
-          <Link to="/register" className="text-[#1a9e80] font-medium hover:text-[#22c9a0] transition-colors">
-            Create an account
-          </Link>
-        </p>
-
-        {/* Google SSO */}
-        {isGoogleClientConfigured() && (
-          <>
-            <div className="flex items-center gap-3 my-5">
-              <div className="flex-1 h-px bg-[#1a2e2e]" />
-              <span className="text-[10px] text-[#253f3a] tracking-[0.12em] uppercase">or continue with</span>
-              <div className="flex-1 h-px bg-[#1a2e2e]" />
-            </div>
-
-            <div className="flex justify-center">
-              <GoogleLogin
-                onSuccess={async (cred) => {
-                  setError(null)
-                  if (!cred.credential) return
-                  setBusy(true)
-                  setToken(cred.credential)
-                  const { ok, detail } = await refresh()
-                  setBusy(false)
-                  if (ok) navigate('/app', { replace: true })
-                  else setError(detail ?? 'Google authentication failed.')
+          <div className="space-y-4">
+            <div className="space-y-1">
+              <label className={`ml-1 text-[10px] font-black uppercase tracking-widest transition-colors ${touched.email && !isEmailValid ? 'text-red-500' : 'text-[#14b8a6]'}`}>Email Address</label>
+              <input
+                type="email"
+                className={`h-11 w-full rounded-xl border bg-[#0d1117] px-4 text-sm font-bold text-white outline-none transition-all placeholder:text-slate-700 focus:ring-1 ${touched.email && !isEmailValid ? 'border-red-500/50 ring-red-500/20 focus:border-red-500' : 'border-white/5 focus:ring-[#14b8a6]/50 focus:border-[#14b8a6]'}`}
+                placeholder="name@university.edu"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value)
+                  if (!touched.email) setTouched(p => ({ ...p, email: true }))
                 }}
-                onError={() => setError('SSO window could not be opened.')}
-                theme="outline"
-                size="large"
-                text="continue_with"
-                shape="rectangular"
-                width={328}
+                onBlur={() => setTouched(p => ({ ...p, email: true }))}
+                onKeyDown={(e) => e.key === 'Enter' && isEmailValid && handleLogin()}
               />
+              {touched.email && !isEmailValid && <p className="ml-1 text-[10px] font-bold text-red-400 italic">× Invalid email format</p>}
             </div>
-          </>
-        )}
 
-        {/* Footer links */}
-        <div className="flex items-center justify-between mt-7 pt-5 border-t border-[#132828]">
-          <p className="text-[11px] text-[#2d5a50]">
-            New here?{' '}
-            <Link to="/register" className="text-[#1a9e80] font-medium hover:text-[#22c9a0]">
-              Create an account
-            </Link>
-          </p>
-          <p className="text-[11px] text-[#253f3a]">
-            <Link to="/verify" className="hover:text-[#3a6a60] transition-colors">Verifier</Link>
-            {' · '}
-            <Link to="/guide" className="hover:text-[#3a6a60] transition-colors">Guide</Link>
-          </p>
+            <div className="space-y-1">
+              <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-[#14b8a6]">Password</label>
+              <div className="relative">
+                <input
+                  type={showPass ? 'text' : 'password'}
+                  className="h-11 w-full rounded-xl border border-white/5 bg-[#0d1117] px-4 pr-10 text-sm font-bold text-white outline-none transition-all placeholder:text-slate-700 focus:ring-1 focus:ring-[#14b8a6]/50 focus:border-[#14b8a6]"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && isEmailValid && handleLogin()}
+                />
+                <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-600 hover:text-white transition-colors">
+                  {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </div>
+
+
+
+            <button
+              disabled={busy || !email.trim() || !password || !isEmailValid}
+              onClick={handleLogin}
+              className={`mt-2 h-12 w-full rounded-xl text-sm font-black uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed ${busy || !email.trim() || !password || !isEmailValid ? 'bg-slate-800 text-slate-500 border border-white/5 shadow-none' : 'bg-[#14b8a6] text-white shadow-lg shadow-[#14b8a6]/20 hover:bg-[#0d9488]'}`}
+            >
+              {busy ? 'Authenticating...' : 'Establish Access'}
+            </button>
+          </div>
+
+          {isGoogleClientConfigured() && (
+            <div className="mt-8 flex flex-col items-center">
+              <span className="mb-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-600">Workspace Login</span>
+              <div className="w-full max-w-[340px] [&>div]:!w-full [&>div>div]:!w-full [&_iframe]:!w-full">
+                <GoogleLogin
+                  onSuccess={async (cred) => {
+                    if (!cred.credential) return
+                    setBusy(true)
+                    setToken(cred.credential)
+                    const { ok, detail } = await refresh()
+                    setBusy(false)
+                    if (ok) {
+                      toast('Signed in via Google', 'success')
+                      navigate('/app', { replace: true })
+                    } else {
+                      setError(detail ?? 'Google authentication failed.')
+                    }
+                  }}
+                  onError={() => setError('SSO window could not be opened.')}
+                  theme="filled_black"
+                  shape="pill"
+                  width="340"
+                />
+              </div>
+            </div>
+          )}
         </div>
+
+        {/* Right Side: Toggle Panel */}
+        <div className="hidden flex-1 flex-col items-center justify-center bg-[#0d1117] p-12 text-center text-white sm:flex relative overflow-hidden border-l border-white/5">
+          {/* Decorative elements to match screenshot "glow" */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-[#14b8a6]/10 rounded-full blur-[80px]" />
+
+          <div className="relative z-10 space-y-6">
+            <h2 className="text-3xl font-black">Hello, Friend!</h2>
+            <p className="text-sm font-medium leading-relaxed text-slate-400">
+              Register with your personal details to use all of site features.
+            </p>
+            <Link
+              to="/register"
+              className="inline-flex h-11 items-center rounded-xl border border-white/20 bg-white/5 px-10 text-[11px] font-black uppercase tracking-widest transition-all hover:bg-white hover:text-black"
+            >
+              Sign Up
+            </Link>
+          </div>
+        </div>
+
       </div>
     </div>
   )

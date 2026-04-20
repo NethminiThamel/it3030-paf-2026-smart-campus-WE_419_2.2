@@ -1,7 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { api } from '../api/client'
+import { CheckCircle2, AlertCircle, ArrowLeft } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { useToast } from '../components/Toast'
 
 export function VerifyPage() {
+  const { toast } = useToast()
   const urlPayload = useMemo(() => {
     try {
       return new URLSearchParams(window.location.search).get('payload') ?? ''
@@ -14,68 +18,24 @@ export function VerifyPage() {
   const [result, setResult] = useState<Record<string, unknown> | null>(null)
   const [err, setErr] = useState<string | null>(null)
   const [autoTried, setAutoTried] = useState(false)
-
-  const receiptText = useMemo(() => {
-    const r = result as
-      | (Record<string, unknown> & {
-          valid?: boolean
-          bookingId?: unknown
-          facilityName?: unknown
-          startTime?: unknown
-          endTime?: unknown
-          requesterEmail?: unknown
-        })
-      | null
-    if (!r) return ''
-
-    const lines: string[] = []
-    lines.push('SMARTCAMPUS CHECK-IN')
-    lines.push('----------------------')
-    lines.push(`Valid: ${String(r.valid ?? false)}`)
-    if (r.bookingId != null) lines.push(`Booking ID: ${String(r.bookingId)}`)
-    if (r.facilityName != null) lines.push(`Resource: ${String(r.facilityName)}`)
-    if (r.startTime != null) lines.push(`Start: ${String(r.startTime)}`)
-    if (r.endTime != null) lines.push(`End: ${String(r.endTime)}`)
-    if (r.requesterEmail != null) lines.push(`Requester: ${String(r.requesterEmail)}`)
-    lines.push('')
-    lines.push('Raw payload:')
-    lines.push(JSON.stringify(r, null, 2))
-    return lines.join('\n')
-  }, [result])
-
-  const downloadTxt = () => {
-    if (!receiptText) return
-    const blob = new Blob([receiptText], { type: 'text/plain;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'smartcampus-checkin.txt'
-    a.click()
-    URL.revokeObjectURL(url)
-  }
-
-  const copyTxt = async () => {
-    if (!receiptText) return
-    try {
-      await navigator.clipboard.writeText(receiptText)
-    } catch {
-      // ignore
-    }
-  }
+  const [busy, setBusy] = useState(false)
 
   async function verify(p?: string) {
     const realPayload = (p ?? payload).trim()
+    if (!realPayload) return
     setErr(null)
     setResult(null)
+    setBusy(true)
     try {
       const { data } = await api.get<Record<string, unknown>>('/api/v1/public/bookings/verify', {
         params: { payload: realPayload },
       })
       setResult(data)
-    } catch (e: unknown) {
-      const msg =
-        (e as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Verification failed'
-      setErr(msg)
+      if (data.valid) toast('Verified!', 'success')
+    } catch (e: any) {
+      setErr(e?.response?.data?.message ?? 'Verification failed.')
+    } finally {
+      setBusy(false)
     }
   }
 
@@ -87,66 +47,55 @@ export function VerifyPage() {
   }, [urlPayload, autoTried])
 
   return (
-    <div className="flex min-h-full flex-col items-center justify-center px-4 py-12">
-      <div className="card max-w-xl w-full">
-        <h1 className="text-xl font-semibold text-white">Booking QR verification</h1>
-        <p className="mt-2 text-sm text-slate-400">
-          Paste a check-in payload in the form <code className="text-teal-300">SMARTCAMPUS:bookingId:token</code>. The
-          the booking QR opens the public pass URL; use this payload for recorded check-in (API or internal tools).
-        </p>
-        <textarea className="input mt-4 min-h-[100px]" value={payload} onChange={(e) => setPayload(e.target.value)} />
-        <button type="button" className="btn btn-primary mt-3 w-full" onClick={() => void verify()}>
-          Verify
-        </button>
+    <div className="flex h-full items-center justify-center bg-[#0d1117] px-4 font-sans relative overflow-hidden">
+      {/* Background accents to match Auth Pages */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-[#14b8a6]/10 blur-[120px]" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-600/10 blur-[120px]" />
+
+      <div className="relative z-10 w-full max-w-[400px] rounded-[2rem] bg-[#161b22] p-10 shadow-2xl shadow-black/80 border border-white/5">
+        <Link to="/" className="mb-6 inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-widest text-slate-500 hover:text-[#14b8a6] transition-colors">
+          <ArrowLeft size={14} /> Back to Hub
+        </Link>
+        
+        <h1 className="mb-2 text-2xl font-black text-white tracking-tight">Security Check</h1>
+        <p className="mb-8 text-[10px] font-black uppercase tracking-widest text-[#14b8a6]">Operations Hub Verification</p>
+
+        <div className="space-y-6">
+          <div className="space-y-1">
+             <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-white/40">Access Token / Payload</label>
+             <textarea
+               className="w-full min-h-[100px] rounded-xl border border-white/5 bg-[#0d1117] p-4 text-sm font-bold text-white outline-none transition-all placeholder:text-slate-700 focus:ring-1 focus:ring-[#14b8a6]/50 focus:border-[#14b8a6] resize-none"
+               placeholder="Paste secure payload here..."
+               value={payload}
+               onChange={(e) => setPayload(e.target.value)}
+             />
+          </div>
+
+          <button
+            disabled={busy || !payload.trim()}
+            onClick={() => void verify()}
+            className="h-12 w-full rounded-xl bg-[#14b8a6] text-sm font-black uppercase tracking-widest text-white shadow-lg shadow-[#14b8a6]/20 transition-all hover:bg-[#0d9488] active:scale-95 disabled:opacity-50"
+          >
+            {busy ? 'Validating...' : 'Verify Token'}
+          </button>
+        </div>
+
         {err && (
-          <div className="mt-3 rounded-xl border border-rose-500/40 bg-rose-950/40 px-3 py-2 text-sm text-rose-200">
+          <div className="mt-6 flex items-center gap-2 rounded-xl bg-red-500/10 p-3 text-xs font-bold text-red-400 border border-red-500/20">
+            <AlertCircle size={14} className="shrink-0" />
             {err}
           </div>
         )}
+
         {result && (
-          <div className="mt-4 space-y-3 rounded-xl border border-slate-800 bg-slate-950/60 p-3">
-            <div className="text-sm font-semibold text-slate-200">Verification result</div>
-            <div className="grid gap-2 text-sm text-slate-300">
-              <div>
-                <span className="font-medium text-slate-200">Valid:</span> {String(result.valid ?? false)}
-              </div>
-              {'bookingId' in result && (
-                <div>
-                  <span className="font-medium text-slate-200">Booking ID:</span> {String(result.bookingId)}
-                </div>
-              )}
-              {'facilityName' in result && (
-                <div>
-                  <span className="font-medium text-slate-200">Resource:</span> {String(result.facilityName)}
-                </div>
-              )}
-              {'startTime' in result && (
-                <div>
-                  <span className="font-medium text-slate-200">Start:</span> {String(result.startTime)}
-                </div>
-              )}
-              {'endTime' in result && (
-                <div>
-                  <span className="font-medium text-slate-200">End:</span> {String(result.endTime)}
-                </div>
-              )}
-              {'requesterEmail' in result && (
-                <div>
-                  <span className="font-medium text-slate-200">Requester:</span> {String(result.requesterEmail)}
-                </div>
-              )}
+          <div className={`mt-8 p-5 rounded-2xl border ${result.valid ? 'bg-teal-500/5 border-teal-500/20' : 'bg-rose-500/5 border-rose-500/20'}`}>
+            <div className={`flex items-center gap-2 mb-3 font-black text-xs uppercase tracking-tighter ${result.valid ? 'text-[#14b8a6]' : 'text-rose-400'}`}>
+              {result.valid ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
+              {result.valid ? 'AUTHORIZED ACCESS' : 'INVALID TOKEN'}
             </div>
-            <div className="flex flex-wrap gap-2">
-              <button type="button" className="btn btn-primary btn-sm" onClick={() => downloadTxt()}>
-                Download TXT
-              </button>
-              <button type="button" className="btn btn-ghost btn-sm" onClick={() => void copyTxt()}>
-                Copy
-              </button>
-            </div>
-            <pre className="mt-2 overflow-auto rounded-lg border border-slate-800 bg-slate-950 p-3 text-[11px] text-slate-300">
-              {receiptText}
-            </pre>
+            <div className="h-px w-full bg-white/5 mb-3" />
+            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none">Booking Reference</p>
+            <p className="mt-1 text-sm font-bold text-white tracking-tight">{String(result.bookingId ?? 'None')}</p>
           </div>
         )}
       </div>

@@ -7,7 +7,6 @@ import {
   Menu,
   Ticket,
   Users,
-  ShieldCheck,
 } from 'lucide-react'
 import { useState, type ReactNode, useMemo } from 'react'
 import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom'
