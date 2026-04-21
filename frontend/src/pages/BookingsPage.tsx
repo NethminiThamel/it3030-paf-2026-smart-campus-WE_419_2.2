@@ -38,6 +38,11 @@ export function BookingsPage() {
     queryFn: async () => (await api.get<Booking[]>('/api/v1/bookings')).data,
   })
 
+  const extractApiError = (e: unknown, fallback: string): string => {
+    const err = e as { response?: { data?: { message?: string } }; message?: string }
+    return err?.response?.data?.message ?? err?.message ?? fallback
+  }
+
   const create = useMutation({
     mutationFn: async () =>
       (
@@ -55,6 +60,7 @@ export function BookingsPage() {
       setPurpose('')
       setFacilityId('')
     },
+    onError: (e) => toast(extractApiError(e, 'Failed to create booking'), 'error'),
   })
 
 
@@ -68,8 +74,9 @@ export function BookingsPage() {
       ).data,
     onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: ['bookings'] })
-      toast(`Booking ${variables.decision.toLowerCase()}!`, 'info')
+      toast(`Booking ${variables.decision.toLowerCase()}!`, 'success')
     },
+    onError: (e) => toast(extractApiError(e, 'Approve/Reject failed'), 'error'),
   })
 
 
@@ -79,6 +86,7 @@ export function BookingsPage() {
       qc.invalidateQueries({ queryKey: ['bookings'] })
       toast('Booking cancelled.', 'info')
     },
+    onError: (e) => toast(extractApiError(e, 'Cancel failed'), 'error'),
   })
 
 
@@ -174,7 +182,7 @@ export function BookingsPage() {
             <div className="flex w-full max-w-md flex-col items-stretch gap-3">
               <div className="flex justify-center p-4 rounded-3xl bg-slate-50 border border-slate-200 shadow-inner">
                 <QRCodeSVG
-                  value={`${summaryText}\nOfficial Link:\n${passUrl}`}
+                  value={`${passUrl}\n\n${summaryText}`}
                   size={240}
                   level="M"
                   bgColor="#f8fafc"
