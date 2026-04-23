@@ -164,7 +164,7 @@ export function RegisterPage() {
               onClick={handleRegister}
               className={`mt-2 h-12 w-full rounded-xl text-sm font-black uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed ${busy || !fullName.trim() || !email.trim() || password.length < 8 || !isLettersOnly ? 'bg-slate-800 text-slate-500 border border-white/5 shadow-none' : 'bg-[#14b8a6] text-white shadow-lg shadow-[#14b8a6]/20 hover:bg-[#0d9488]'}`}
             >
-              {busy ? 'Creating Hub...' : 'Establish Connection'}
+              {busy ? 'Creating Hub...' : 'Sign In'}
             </button>
           </div>
 

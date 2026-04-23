@@ -83,22 +83,34 @@ export function TicketsPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Maintenance & incidents</h1>
-          <p className="text-sm font-medium text-slate-500">Create tickets, attach evidence, track resolution</p>
-          {(user?.role === 'ADMIN' || user?.role === 'TECHNICIAN') && (
+          <h1 className="text-2xl font-bold text-slate-900">
+            {user?.role === 'TECHNICIAN' ? 'Assigned Maintenance' : 'Maintenance & incidents'}
+          </h1>
+          <p className="text-sm font-medium text-slate-500">
+            {user?.role === 'TECHNICIAN' 
+              ? 'Review assigned tasks, update progress, and document resolutions' 
+              : 'Create tickets, attach evidence, track resolution'}
+          </p>
+          {user?.role === 'ADMIN' && (
             <p className="mt-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-              <span className="text-slate-500">Workflow:</span> open a ticket by its{' '}
-              <span className="text-teal-600">#ID</span> link — there you can assign technicians (admin), set
-              status to Resolved or Closed,
-              and add comments.
+              <span className="text-slate-500">Admin Workflow:</span> Open a ticket by its{' '}
+              <span className="text-teal-600">#ID</span> link to assign technicians, force status changes, or add management notes.
+            </p>
+          )}
+          {user?.role === 'TECHNICIAN' && (
+            <p className="mt-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+              <span className="text-teal-600">Resolution Workflow:</span> Select{' '}
+              <span className="text-teal-600">Open details</span> to update task progress, add resolution notes, or communicate with the reporter.
             </p>
           )}
         </div>
-        <button type="button" className="btn btn-primary" onClick={() => setOpen((v) => !v)}>
-          <Plus className="h-4 w-4" /> New ticket
-        </button>
+        {user?.role !== 'TECHNICIAN' && (
+          <button type="button" className="btn btn-primary" onClick={() => setOpen((v) => !v)}>
+            <Plus className="h-4 w-4" /> New ticket
+          </button>
+        )}
       </div>
-      {open && (
+      {user?.role !== 'TECHNICIAN' && open && (
         <div className="card border-slate-100">
           <h2 className="mb-4 text-sm font-bold text-slate-800">Create ticket</h2>
           <div className="grid gap-3 md:grid-cols-2">
