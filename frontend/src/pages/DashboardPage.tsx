@@ -216,7 +216,122 @@ export function DashboardPage() {
     )
   }
 
-  /* ── USER / TECHNICIAN VIEW ── */
+  /* ── TECHNICIAN VIEW ── */
+  if (user.role === 'TECHNICIAN') {
+    const assigned = tickets.data?.filter((t) => t.assignedTechnicianId === user.id) ?? []
+    const urgent = assigned.filter((t) => (t.priority === 'HIGH' || t.priority === 'CRITICAL') && t.status !== 'RESOLVED' && t.status !== 'CLOSED')
+    const inProgress = assigned.filter((t) => t.status === 'IN_PROGRESS')
+    const openAssigned = assigned.filter((t) => t.status === 'OPEN' || t.status === 'IN_PROGRESS')
+
+    return (
+      <div className="space-y-5 animate-in fade-in duration-500">
+        <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#0d1117] via-[#0f2027] to-[#1e293b] p-6 text-white shadow-lg">
+          <div className="pointer-events-none absolute -right-8 -top-8 h-36 w-36 rounded-full bg-teal-500/10 blur-2xl" />
+          <div className="relative flex items-center justify-between gap-6">
+            <div className="max-w-xl">
+              <div className="mb-2 inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/8 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-white/75">
+                <ShieldCheck className="h-3 w-3 text-teal-400" />
+                Technician Portal
+              </div>
+              <h2 className="text-2xl font-black tracking-tight">
+                {greeting}, {user.fullName || 'Technician'}
+              </h2>
+              <p className="mt-1.5 text-[12px] text-white/50">Your active maintenance queue and support history.</p>
+            </div>
+            <div className="flex gap-2.5 flex-shrink-0">
+              <HeroStatPill label="Assigned" value={assigned.length} />
+              <HeroStatPill label="Pending" value={openAssigned.length} />
+            </div>
+          </div>
+        </section>
+
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <StatCard
+            title="My Work Queue"
+            value={openAssigned.length}
+            subtitle="Tickets needing action"
+            icon={<Ticket className="h-4 w-4" />}
+            variant="teal"
+          />
+          <StatCard
+            title="Urgent Alerts"
+            value={urgent.length}
+            subtitle="High & Critical priority"
+            icon={<Activity className="h-4 w-4" />}
+            variant="amber"
+          />
+          <StatCard
+            title="In Progress"
+            value={inProgress.length}
+            subtitle="Currently resolving"
+            icon={<Clock3 className="h-4 w-4" />}
+            variant="blue"
+          />
+        </div>
+
+        <div className="grid gap-5 xl:grid-cols-2">
+          <DashboardPanel title="My Task Queue" subtitle="Active tickets assigned to you" icon={<Layers className="h-4 w-4" />}>
+            <div className="space-y-3">
+              {openAssigned.slice(0, 5).map((t) => (
+                <div key={t.id} className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 p-3.5 transition hover:shadow-md">
+                  <div className="flex items-center gap-3">
+                    <div className={clsx(
+                      "flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-slate-200",
+                      t.priority === 'CRITICAL' || t.priority === 'HIGH' ? "text-rose-500" : "text-teal-600"
+                    )}>
+                      <Ticket className="h-5 w-5" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-[13px] font-bold text-slate-800">{t.category}</p>
+                      <p className="text-[11px] text-slate-400 truncate max-w-[200px]">{t.facilityName || 'Global issue'}</p>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end gap-1">
+                    <span className={clsx(
+                      "rounded-lg px-2.5 py-1 text-[9px] font-black uppercase tracking-widest",
+                      t.status === 'IN_PROGRESS' ? "bg-blue-100 text-blue-700" : "bg-amber-100 text-amber-700"
+                    )}>{t.status.replace('_', ' ')}</span>
+                    <span className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">ID: CF-{t.id}</span>
+                  </div>
+                </div>
+              ))}
+              {openAssigned.length === 0 && (
+                <div className="py-12 text-center">
+                  <CheckCircle2 className="mx-auto h-10 w-10 text-slate-200" />
+                  <p className="mt-2 text-[12px] font-bold text-slate-400">All clear! No pending tasks.</p>
+                </div>
+              )}
+            </div>
+          </DashboardPanel>
+
+          <DashboardPanel title="Latest Updates" subtitle="Recent activity on your tickets" icon={<Activity className="h-4 w-4" />}>
+            <div className="space-y-3">
+              {assigned.slice(0, 5).map((t) => (
+                <div key={t.id} className="flex items-center gap-4 rounded-xl border border-slate-100 bg-white p-3.5">
+                   <div className="text-[10px] font-black uppercase text-slate-300 w-16 shrink-0 tracking-tighter">
+                     {new Date(t.updatedAt).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                   </div>
+                   <div className="flex-1 min-w-0">
+                     <p className="text-[12px] font-bold text-slate-700 truncate">{t.description}</p>
+                     <p className="text-[10px] text-slate-400">Status: {t.status}</p>
+                   </div>
+                   <div className={clsx(
+                     "h-2 w-2 rounded-full",
+                     t.status === 'CLOSED' || t.status === 'RESOLVED' ? "bg-emerald-500" : "bg-blue-400"
+                   )} />
+                </div>
+              ))}
+               {assigned.length === 0 && (
+                <p className="py-12 text-center text-[12px] text-slate-300 font-medium italic">No recent workload history</p>
+              )}
+            </div>
+          </DashboardPanel>
+        </div>
+      </div>
+    )
+  }
+
+  /* ── USER VIEW ── */
   const activeTickets = tickets.data?.filter((t) => t.status !== 'CLOSED' && t.status !== 'RESOLVED' && t.status !== 'REJECTED').length ?? 0
   const pendingBookings = bookings.data?.filter(b => b.status === 'PENDING').length ?? 0
   const approvedBookings = bookings.data?.filter(b => b.status === 'APPROVED').length ?? 0
