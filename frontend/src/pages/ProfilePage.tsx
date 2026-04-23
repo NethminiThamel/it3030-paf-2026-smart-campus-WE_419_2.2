@@ -289,8 +289,27 @@ function SessionCard({ label, value, accent }: { label: string; value: string; a
 }
 
 function getPermissions(role: string): string[] {
-  const base = ['View facilities', 'Create bookings', 'Submit tickets']
-  if (role === 'TECHNICIAN') return [...base, 'Manage assigned tickets']
-  if (role === 'ADMIN') return [...base, 'Manage assigned tickets', 'Admin dashboard', 'Manage all users']
-  return base
+  if (role === 'TECHNICIAN') {
+    return [
+      'View assigned tasks',
+      'Resolve maintenance tickets',
+      'Document resolution activity',
+      'Communicate with reporters'
+    ]
+  }
+  if (role === 'ADMIN') {
+    return [
+      'Full system management',
+      'Global dashboard access',
+      'Manage all users',
+      'Approve/Reject bookings',
+      'Oversee campus tickets'
+    ]
+  }
+  return [
+    'Browse campus facilities',
+    'Create resource bookings',
+    'Submit maintenance tickets',
+    'Track personal activity'
+  ]
 }
