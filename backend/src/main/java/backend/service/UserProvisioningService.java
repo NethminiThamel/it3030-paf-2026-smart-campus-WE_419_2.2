@@ -42,13 +42,18 @@ public class UserProvisioningService {
 				.findByGoogleSub(sub)
 				.map(
 						existing -> {
+							if (Boolean.TRUE.equals(existing.getDeleted())) {
+								throw new ApiException(HttpStatus.FORBIDDEN, "Account has been deactivated");
+							}
 							Role desiredRole = resolveInitialRole(emailNorm);
 							existing.setEmail(emailNorm);
-							existing.setFullName(name);
+							if (existing.getFullName() == null || existing.getFullName().isBlank()) {
+								existing.setFullName(name);
+							}
 							if (desiredRole == Role.ADMIN && existing.getRole() != Role.ADMIN) {
 								existing.setRole(Role.ADMIN);
 							}
-							return existing;
+							return appUserRepository.save(existing);
 						})
 				.orElseGet(() -> provisionNewGoogleUser(sub, emailNorm, name));
 	}
@@ -57,6 +62,9 @@ public class UserProvisioningService {
 		Optional<AppUser> byEmail = appUserRepository.findByEmailIgnoreCase(emailNorm);
 		if (byEmail.isPresent()) {
 			AppUser u = byEmail.get();
+			if (Boolean.TRUE.equals(u.getDeleted())) {
+				throw new ApiException(HttpStatus.FORBIDDEN, "Account has been deactivated");
+			}
 			if (u.getGoogleSub() != null && !u.getGoogleSub().equals(sub)) {
 				throw new ApiException(
 						HttpStatus.CONFLICT, "This email is already linked to a different Google account");
