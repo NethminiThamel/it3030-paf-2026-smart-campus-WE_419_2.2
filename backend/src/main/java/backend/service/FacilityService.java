@@ -1,17 +1,19 @@
 package backend.service;
 
 import backend.domain.Facility;
+import backend.domain.FacilityImage;
 import backend.domain.FacilityStatus;
 import backend.domain.FacilityType;
-import backend.domain.FacilityImage;
 import backend.dto.CreateFacilityRequest;
 import backend.dto.FacilityDto;
+import backend.dto.FacilityImageDto;
 import backend.exception.ApiException;
 import backend.repository.FacilityImageRepository;
 import backend.repository.FacilityRepository;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +32,12 @@ public class FacilityService {
 	private final FacilityImageRepository facilityImageRepository;
 	private final FacilityImageStorageService facilityImageStorageService;
 
+	private Facility getEntity(Long id) {
+		return facilityRepository
+				.findById(id)
+				.orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Facility not found"));
+	}
+
 	@Transactional(readOnly = true)
 	public List<FacilityDto> search(
 			FacilityType type,
@@ -37,7 +45,7 @@ public class FacilityService {
 			String locationContains,
 			FacilityStatus status,
 			Boolean onlyAvailableNow) {
-		Specification<Facility> spec = (root, cq, cb) -> cb.conjunction();
+		Specification<Facility> spec = (root, cq, cb) -> cb.equal(root.get("deleted"), false);
 		if (type != null) {
 			spec = spec.and((root, q, cb) -> cb.equal(root.get("resourceType"), type));
 		}
@@ -46,16 +54,14 @@ public class FacilityService {
 		}
 		if (locationContains != null && !locationContains.isBlank()) {
 			String like = "%" + locationContains.toLowerCase() + "%";
-			spec =
-					spec.and(
-							(root, q, cb) ->
-									cb.like(cb.lower(root.get("location")), like));
+			spec = spec.and(
+					(root, q, cb) -> cb.like(cb.lower(root.get("location")), like));
 		}
 		if (status != null) {
 			spec = spec.and((root, q, cb) -> cb.equal(root.get("status"), status));
 		}
 		List<Facility> list = facilityRepository.findAll(spec);
-		Map<Long, List<String>> imagesByFacilityId = loadImagesForFacilities(list);
+		Map<Long, List<FacilityImageDto>> imagesByFacilityId = loadImagesForFacilities(list);
 		Instant now = Instant.now();
 		List<FacilityDto> out = new ArrayList<>();
 		for (Facility f : list) {
@@ -63,7 +69,11 @@ public class FacilityService {
 			if (Boolean.TRUE.equals(onlyAvailableNow) && !availNow) {
 				continue;
 			}
-			out.add(toDto(f, availNow, imagesByFacilityId.getOrDefault(f.getId(), List.of())));
+			List<FacilityImageDto> facilityImages = imagesByFacilityId.get(f.getId());
+			if (facilityImages == null) {
+				facilityImages = new ArrayList<>();
+			}
+			out.add(toDto(f, availNow, facilityImages));
 		}
 		return out;
 	}
@@ -72,11 +82,10 @@ public class FacilityService {
 		if (f.getStatus() != FacilityStatus.ACTIVE) {
 			return false;
 		}
-		// Booking logic removed. Always return true for available now.
 		return true;
 	}
 
-	private FacilityDto toDto(Facility f, Boolean availNow, List<String> images) {
+	private FacilityDto toDto(Facility f, Boolean availNow, List<FacilityImageDto> images) {
 		return new FacilityDto(
 				f.getId(),
 				f.getName(),
@@ -94,25 +103,28 @@ public class FacilityService {
 	public FacilityDto get(Long id) {
 		Facility f = getEntity(id);
 		Instant now = Instant.now();
-		Map<Long, List<String>> imagesByFacilityId = loadImagesForFacilities(List.of(f));
-		return toDto(f, computeAvailableNow(f, now), imagesByFacilityId.getOrDefault(f.getId(), List.of()));
+		Map<Long, List<FacilityImageDto>> imagesByFacilityId = loadImagesForFacilities(Collections.singletonList(f));
+		List<FacilityImageDto> facilityImages = imagesByFacilityId.get(f.getId());
+		if (facilityImages == null) {
+			facilityImages = new ArrayList<>();
+		}
+		return toDto(f, computeAvailableNow(f, now), facilityImages);
 	}
 
 	@Transactional
 	public FacilityDto create(CreateFacilityRequest req) {
-		Facility f =
-				Facility.builder()
-						.name(req.name())
-						.resourceType(req.resourceType())
-						.capacity(req.capacity())
-						.location(req.location())
-						.availabilityWindow(req.availabilityWindow())
-						.status(req.status())
-						.description(req.description())
-						.createdAt(Instant.now())
-						.build();
+		Facility f = Facility.builder()
+				.name(req.name())
+				.resourceType(req.resourceType())
+				.capacity(req.capacity())
+				.location(req.location())
+				.availabilityWindow(req.availabilityWindow())
+				.status(req.status())
+				.description(req.description())
+				.createdAt(Instant.now())
+				.build();
 		f = facilityRepository.save(f);
-		return toDto(f, computeAvailableNow(f, Instant.now()), List.of());
+		return toDto(f, computeAvailableNow(f, Instant.now()), new ArrayList<>());
 	}
 
 	@Transactional
@@ -125,7 +137,12 @@ public class FacilityService {
 		f.setAvailabilityWindow(req.availabilityWindow());
 		f.setStatus(req.status());
 		f.setDescription(req.description());
-		return toDto(f, computeAvailableNow(f, Instant.now()), loadImagesForFacilities(List.of(f)).getOrDefault(f.getId(), List.of()));
+		Map<Long, List<FacilityImageDto>> imagesByFacilityId = loadImagesForFacilities(Collections.singletonList(f));
+		List<FacilityImageDto> facilityImages = imagesByFacilityId.get(f.getId());
+		if (facilityImages == null) {
+			facilityImages = new ArrayList<>();
+		}
+		return toDto(f, computeAvailableNow(f, Instant.now()), facilityImages);
 	}
 
 	@Transactional
@@ -133,7 +150,7 @@ public class FacilityService {
 		if (!facilityRepository.existsById(id)) {
 			throw new ApiException(HttpStatus.NOT_FOUND, "Facility not found");
 		}
-		facilityRepository.deleteById(id);
+		facilityRepository.softDelete(id);
 	}
 
 	@Transactional
@@ -146,42 +163,61 @@ public class FacilityService {
 		}
 		Facility f = getEntity(id);
 		for (MultipartFile mf : files) {
-			if (mf == null || mf.isEmpty()) continue;
+			if (mf == null || mf.isEmpty())
+				continue;
 			try {
 				var stored = facilityImageStorageService.store(mf);
-				var img =
-						FacilityImage.builder()
-								.facility(f)
-								.storedFilename(stored.storedFilename())
-								.originalFilename(stored.originalFilename())
-								.contentType(stored.contentType())
-								.createdAt(Instant.now())
-								.build();
+				var img = FacilityImage.builder()
+						.facility(f)
+						.storedFilename(stored.storedFilename())
+						.originalFilename(stored.originalFilename())
+						.contentType(stored.contentType())
+						.createdAt(Instant.now())
+						.build();
 				facilityImageRepository.save(img);
 			} catch (Exception e) {
 				throw new ApiException(HttpStatus.BAD_REQUEST, "Failed to store image");
 			}
 		}
-		Map<Long, List<String>> imagesByFacilityId = loadImagesForFacilities(List.of(f));
-		return toDto(f, computeAvailableNow(f, Instant.now()), imagesByFacilityId.getOrDefault(f.getId(), List.of()));
+		Map<Long, List<FacilityImageDto>> imagesByFacilityId = loadImagesForFacilities(Collections.singletonList(f));
+		List<FacilityImageDto> facilityImages = imagesByFacilityId.get(f.getId());
+		if (facilityImages == null) {
+			facilityImages = new ArrayList<>();
+		}
+		return toDto(f, computeAvailableNow(f, Instant.now()), facilityImages);
 	}
 
-	private Map<Long, List<String>> loadImagesForFacilities(List<Facility> facilities) {
-		if (facilities == null || facilities.isEmpty()) return Map.of();
-		Collection<Long> ids = facilities.stream().map(Facility::getId).toList();
+	@Transactional
+	public void deleteImage(Long facilityId, Long imageId) {
+		FacilityImage img = facilityImageRepository
+				.findById(imageId)
+				.orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Image not found"));
+		if (!img.getFacility().getId().equals(facilityId)) {
+			throw new ApiException(HttpStatus.BAD_REQUEST, "Image does not belong to this facility");
+		}
+		facilityImageStorageService.delete(img.getStoredFilename());
+		facilityImageRepository.delete(img);
+	}
+
+	private Map<Long, List<FacilityImageDto>> loadImagesForFacilities(List<Facility> facilities) {
+		if (facilities == null || facilities.isEmpty())
+			return Map.of();
+		Collection<Long> ids = new ArrayList<>();
+		for (Facility f : facilities) {
+			ids.add(f.getId());
+		}
 		List<FacilityImage> imgs = facilityImageRepository.findByFacilityIdIn(ids);
-		Map<Long, List<String>> out = new HashMap<>();
+		Map<Long, List<FacilityImageDto>> out = new HashMap<>();
 		for (FacilityImage img : imgs) {
-			if (img.getFacility() == null) continue;
-			out.computeIfAbsent(img.getFacility().getId(), ignored -> new ArrayList<>())
-					.add("/uploads/facility-images/" + img.getStoredFilename());
+			if (img.getFacility() == null)
+				continue;
+			Long fid = img.getFacility().getId();
+			if (!out.containsKey(fid)) {
+				out.put(fid, new ArrayList<>());
+			}
+			out.get(fid).add(new FacilityImageDto(img.getId(), "/uploads/facility-images/" + img.getStoredFilename()));
 		}
 		return out;
 	}
 
-	private Facility getEntity(Long id) {
-		return facilityRepository
-				.findById(id)
-				.orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Facility not found"));
-	}
 }

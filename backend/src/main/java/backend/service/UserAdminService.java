@@ -19,7 +19,7 @@ public class UserAdminService {
 
 	@Transactional(readOnly = true)
 	public List<UserDto> listAll() {
-		return appUserRepository.findAll().stream()
+		return appUserRepository.findByDeletedFalse().stream()
 				.map(this::toDto)
 				.toList();
 	}
@@ -39,7 +39,7 @@ public class UserAdminService {
 		if (!appUserRepository.existsById(userId)) {
 			throw new ApiException(HttpStatus.NOT_FOUND, "User not found");
 		}
-		appUserRepository.deleteById(userId);
+		appUserRepository.softDelete(userId);
 	}
 
 	private UserDto toDto(AppUser u) {
