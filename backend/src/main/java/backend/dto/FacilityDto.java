@@ -14,4 +14,4 @@ public record FacilityDto(
 		FacilityStatus status,
 		String description,
 		Boolean currentlyAvailable,
-		List<String> images) {}
+		List<FacilityImageDto> images) {}
