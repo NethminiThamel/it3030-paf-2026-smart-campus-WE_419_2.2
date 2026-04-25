@@ -186,10 +186,11 @@ public class BookingService {
 		String verifyLine = "SMARTCAMPUS:" + b.getId() + ":" + b.getQrToken();
 		String passUrl = buildPublicBookingPassUrl(b.getQrToken(), passBaseOverride);
 		String summaryText = buildPassSummaryPlainText(b);
-		
-		// By combining text + URL, the phone scanner shows the details even if offline,
-		// and still offers a link to the official pass page.
-		String qrPayload = summaryText + "\nOfficial Link:\n" + passUrl;
+
+		// URL must be the first token so iOS Camera recognises the QR as a link and
+		// offers a "Open in Safari" action that loads the full pass HTML page. The
+		// summary text is appended for offline fallback / Android long-press preview.
+		String qrPayload = passUrl + "\n\n" + summaryText;
 		
 		Map<String, String> out = new LinkedHashMap<>();
 		out.put("passUrl", passUrl);

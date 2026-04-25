@@ -113,13 +113,19 @@ export function LoginPage() {
               onClick={handleLogin}
               className={`mt-2 h-12 w-full rounded-xl text-sm font-black uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed ${busy || !email.trim() || !password || !isEmailValid ? 'bg-slate-800 text-slate-500 border border-white/5 shadow-none' : 'bg-[#14b8a6] text-white shadow-lg shadow-[#14b8a6]/20 hover:bg-[#0d9488]'}`}
             >
-              {busy ? 'Authenticating...' : 'Establish Access'}
+              {busy ? 'Authenticating...' : 'SIGN In'}
             </button>
           </div>
 
           {isGoogleClientConfigured() && (
-            <div className="mt-8 flex flex-col items-center">
-              <span className="mb-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-600">Workspace Login</span>
+            <div className="mt-8 flex flex-col items-center border-t border-white/5 pt-8">
+              <div className="mb-6 text-center space-y-1">
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#14b8a6]">Identity Verification</span>
+                <p className="text-[11px] font-bold text-slate-400">
+                  Already a user? <span className="text-white">Sign In</span>. New here? <span className="text-white">Sign Up</span>.
+                </p>
+                <p className="text-[9px] font-medium text-slate-600 uppercase tracking-widest mt-1">Workspace Authentication</p>
+              </div>
               <div className="w-full max-w-[340px] [&>div]:!w-full [&>div>div]:!w-full [&_iframe]:!w-full">
                 <GoogleLogin
                   onSuccess={async (cred) => {
@@ -129,7 +135,7 @@ export function LoginPage() {
                     const { ok, detail } = await refresh()
                     setBusy(false)
                     if (ok) {
-                      toast('Signed in via Google', 'success')
+                      toast('Authenticated via Workspace SSO', 'success')
                       navigate('/app', { replace: true })
                     } else {
                       setError(detail ?? 'Google authentication failed.')
@@ -139,6 +145,7 @@ export function LoginPage() {
                   theme="filled_black"
                   shape="pill"
                   width="340"
+                  text="continue_with"
                 />
               </div>
             </div>
@@ -151,7 +158,7 @@ export function LoginPage() {
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-[#14b8a6]/10 rounded-full blur-[80px]" />
 
           <div className="relative z-10 space-y-6">
-            <h2 className="text-3xl font-black">Hello, Friend!</h2>
+            <h2 className="text-3xl font-black">Hello!</h2>
             <p className="text-sm font-medium leading-relaxed text-slate-400">
               Register with your personal details to use all of site features.
             </p>

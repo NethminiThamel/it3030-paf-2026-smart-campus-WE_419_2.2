@@ -22,7 +22,7 @@ export interface Facility {
   status: FacilityStatus
   description: string | null
   currentlyAvailable: boolean | null
-  images: string[]
+  images: { id: number; url: string }[]
 }
 
 export type BookingStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED'

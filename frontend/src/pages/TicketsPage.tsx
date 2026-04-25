@@ -11,6 +11,17 @@ import type { Facility, Ticket, TicketPriority } from '../types'
 
 import clsx from 'clsx'
 
+const categories = [
+  'IT Support',
+  'Electrical',
+  'Maintenance',
+  'Plumbing',
+  'Cleaning',
+  'Furniture',
+  'Security',
+  'Others',
+]
+
 export function TicketsPage() {
   const { user } = useAuth()
   const qc = useQueryClient()
@@ -19,11 +30,12 @@ export function TicketsPage() {
 
   const [fileInputKey, setFileInputKey] = useState(0)
   const [facilityId, setFacilityId] = useState<number | ''>('')
-  const [category, setCategory] = useState('AV / IT')
+  const [category, setCategory] = useState(categories[0])
   const [description, setDescription] = useState('')
   const [priority, setPriority] = useState<TicketPriority>('MEDIUM')
   const [contactEmail, setContactEmail] = useState('')
   const [files, setFiles] = useState<File[]>([])
+  const [errors, setErrors] = useState<Record<string, string>>({})
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   function mergeFiles(incoming: FileList | File[] | null) {
@@ -51,8 +63,25 @@ export function TicketsPage() {
     queryFn: async () => (await api.get<Facility[]>('/api/v1/facilities')).data,
   })
 
+  function validate() {
+    const e: Record<string, string> = {}
+    if (!category.trim()) e.category = 'Category is required'
+    if (!description.trim()) e.description = 'Description is required'
+    else if (description.length < 10) e.description = 'Description must be at least 10 characters'
+    
+    if (!contactEmail.trim()) {
+      e.contactEmail = 'Contact email is required'
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail)) {
+      e.contactEmail = 'Invalid email format'
+    }
+    
+    setErrors(e)
+    return Object.keys(e).length === 0
+  }
+
   const create = useMutation({
     mutationFn: async () => {
+      if (!validate()) throw new Error('Validation failed')
       const fd = new FormData()
       if (facilityId !== '') fd.append('facilityId', String(facilityId))
       fd.append('category', category)
@@ -79,31 +108,55 @@ export function TicketsPage() {
     },
   })
 
+  const deleteTicket = useMutation({
+    mutationFn: async (id: number) => api.delete(`/api/v1/tickets/${id}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['tickets'] })
+      toast('Ticket deleted successfully', 'success')
+    },
+    onError: (err: any) => {
+      const msg = err.response?.data?.message || 'Failed to delete ticket'
+      toast(msg, 'error')
+    },
+  })
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Maintenance & incidents</h1>
-          <p className="text-sm font-medium text-slate-500">Create tickets, attach evidence, track resolution</p>
-          {(user?.role === 'ADMIN' || user?.role === 'TECHNICIAN') && (
+          <h1 className="text-2xl font-bold text-slate-900">
+            {user?.role === 'TECHNICIAN' ? 'Assigned Maintenance' : 'Maintenance & incidents'}
+          </h1>
+          <p className="text-sm font-medium text-slate-500">
+            {user?.role === 'TECHNICIAN' 
+              ? 'Review assigned tasks, update progress, and document resolutions' 
+              : 'Create tickets, attach evidence, track resolution'}
+          </p>
+          {user?.role === 'ADMIN' && (
             <p className="mt-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-              <span className="text-slate-500">Workflow:</span> open a ticket by its{' '}
-              <span className="text-teal-600">#ID</span> link — there you can assign technicians (admin), set
-              status to Resolved or Closed,
-              and add comments.
+              <span className="text-slate-500">Admin Workflow:</span> Open a ticket by its{' '}
+              <span className="text-teal-600">#ID</span> link to assign technicians, force status changes, or add management notes.
+            </p>
+          )}
+          {user?.role === 'TECHNICIAN' && (
+            <p className="mt-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+              <span className="text-teal-600">Resolution Workflow:</span> Select{' '}
+              <span className="text-teal-600">Open details</span> to update task progress, add resolution notes, or communicate with the reporter.
             </p>
           )}
         </div>
-        <button type="button" className="btn btn-primary" onClick={() => setOpen((v) => !v)}>
-          <Plus className="h-4 w-4" /> New ticket
-        </button>
+        {user?.role !== 'TECHNICIAN' && (
+          <button type="button" className="btn btn-primary" onClick={() => setOpen((v) => !v)}>
+            <Plus className="h-4 w-4" /> New ticket
+          </button>
+        )}
       </div>
-      {open && (
+      {user?.role !== 'TECHNICIAN' && open && (
         <div className="card border-slate-100">
           <h2 className="mb-4 text-sm font-bold text-slate-800">Create ticket</h2>
           <div className="grid gap-3 md:grid-cols-2">
             <div className="md:col-span-2">
-              <label className="label">Facility (optional)</label>
+              <label className="label">Faculty (optional)</label>
               <select
                 className="input"
                 value={facilityId === '' ? '' : String(facilityId)}
@@ -119,7 +172,21 @@ export function TicketsPage() {
             </div>
             <div>
               <label className="label">Category</label>
-              <input className="input" value={category} onChange={(e) => setCategory(e.target.value)} />
+              <select
+                className={clsx('input', errors.category && 'border-rose-500 ring-rose-100')}
+                value={category}
+                onChange={(e) => {
+                  setCategory(e.target.value)
+                  if (errors.category) setErrors((prev) => ({ ...prev, category: '' }))
+                }}
+              >
+                {categories.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+              {errors.category && <p className="mt-1 text-[10px] font-bold text-rose-500 uppercase">{errors.category}</p>}
             </div>
             <div>
               <label className="label">Priority</label>
@@ -137,11 +204,33 @@ export function TicketsPage() {
             </div>
             <div className="md:col-span-2">
               <label className="label">Description</label>
-              <textarea className="input min-h-[110px]" value={description} onChange={(e) => setDescription(e.target.value)} />
+              <textarea 
+                className={clsx('input min-h-[110px]', errors.description && 'border-rose-500 ring-rose-100')} 
+                value={description} 
+                onChange={(e) => {
+                  setDescription(e.target.value)
+                  if (errors.description) setErrors(prev => ({ ...prev, description: '' }))
+                }} 
+              />
+              {errors.description && <p className="mt-1 text-[10px] font-bold text-rose-500 uppercase">{errors.description}</p>}
             </div>
             <div className="md:col-span-2">
               <label className="label">Contact email</label>
-              <input className="input" type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} />
+              <input 
+                className={clsx('input', errors.contactEmail && 'border-rose-500 ring-rose-100')} 
+                type="email" 
+                value={contactEmail} 
+                onChange={(e) => {
+                  setContactEmail(e.target.value)
+                  if (errors.contactEmail) setErrors((prev) => ({ ...prev, contactEmail: '' }))
+                }}
+                onBlur={() => {
+                  if (contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail)) {
+                    setErrors((prev) => ({ ...prev, contactEmail: 'Invalid email format' }))
+                  }
+                }}
+              />
+              {errors.contactEmail && <p className="mt-1 text-[10px] font-bold text-rose-500 uppercase">{errors.contactEmail}</p>}
             </div>
             <div className="md:col-span-2">
               <label className="label">Attachments (max 3 images)</label>
@@ -178,7 +267,7 @@ export function TicketsPage() {
               <button
                 type="button"
                 className="btn btn-primary"
-                disabled={!description || !contactEmail || create.isPending}
+                disabled={create.isPending}
                 onClick={() => create.mutate()}
               >
                 Submit ticket
@@ -254,6 +343,19 @@ export function TicketsPage() {
                   >
                     Open details
                   </Link>
+                  {(user?.role === 'ADMIN' || (user?.email === t.reporterEmail && t.status === 'OPEN')) && (
+                    <button
+                      type="button"
+                      className="ml-4 font-bold text-rose-500 hover:underline text-xs"
+                      onClick={() => {
+                        if (window.confirm('Are you sure you want to delete this ticket?')) {
+                          deleteTicket.mutate(t.id)
+                        }
+                      }}
+                    >
+                      Delete
+                    </button>
+                  )}
                 </td>
                 <td className="py-4 text-right text-[11px] font-bold text-slate-400">{format(new Date(t.updatedAt), 'PPp')}</td>
               </tr>

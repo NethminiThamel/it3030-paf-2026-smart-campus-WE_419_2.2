@@ -76,8 +76,8 @@ export function ProfilePage() {
     if (file) uploadPhoto.mutate(file)
   }
 
-  const imageUrl = user.profilePicture 
-    ? `${import.meta.env.VITE_API_BASE}${user.profilePicture}` 
+  const imageUrl = user.profilePicture
+    ? `${import.meta.env.VITE_API_BASE}${user.profilePicture}`
     : null
 
   return (
@@ -102,7 +102,7 @@ export function ProfilePage() {
                 initials
               )}
             </div>
-            
+
             <label className="absolute -bottom-2 -right-2 flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl bg-slate-900 text-white shadow-lg ring-4 ring-[#0d1117] transition hover:scale-110 active:scale-95">
               <Camera className="h-4 w-4" />
               <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
@@ -289,8 +289,27 @@ function SessionCard({ label, value, accent }: { label: string; value: string; a
 }
 
 function getPermissions(role: string): string[] {
-  const base = ['View facilities', 'Create bookings', 'Submit tickets']
-  if (role === 'TECHNICIAN') return [...base, 'Manage assigned tickets']
-  if (role === 'ADMIN') return [...base, 'Manage assigned tickets', 'Admin dashboard', 'Manage all users']
-  return base
+  if (role === 'TECHNICIAN') {
+    return [
+      'View assigned tasks',
+      'Resolve maintenance tickets',
+      'Document resolution activity',
+      'Communicate with reporters'
+    ]
+  }
+  if (role === 'ADMIN') {
+    return [
+      'Full system management',
+      'Global dashboard access',
+      'Manage all users',
+      'Approve/Reject bookings',
+      'Oversee campus tickets'
+    ]
+  }
+  return [
+    'Browse campus facilities',
+    'Create resource bookings',
+    'Submit maintenance tickets',
+    'Track personal activity'
+  ]
 }

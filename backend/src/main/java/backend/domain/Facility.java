@@ -61,4 +61,8 @@ public class Facility {
 	@Builder.Default
 	@jakarta.persistence.OneToMany(mappedBy = "facility", cascade = jakarta.persistence.CascadeType.ALL, orphanRemoval = true)
 	private java.util.List<Booking> bookings = new java.util.ArrayList<>();
+
+	@Column(nullable = false)
+	@Builder.Default
+	private Boolean deleted = false;
 }

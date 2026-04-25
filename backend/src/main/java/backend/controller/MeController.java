@@ -44,7 +44,6 @@ public class MeController {
 		return new UserDto(u.getId(), u.getEmail(), u.getFullName(), u.getRole(), u.getProfilePicture());
 	}
 
-
 	@PatchMapping
 	@Transactional
 	public UserDto update(Authentication authentication, @Valid @RequestBody UpdateProfileRequest req) {
@@ -54,4 +53,3 @@ public class MeController {
 	}
 
 }
-
