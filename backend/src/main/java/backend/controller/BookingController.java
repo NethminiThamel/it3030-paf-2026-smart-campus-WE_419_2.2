@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/bookings")
+@PreAuthorize("hasAnyRole('USER', 'ADMIN')")
 @RequiredArgsConstructor
 public class BookingController {
 
@@ -37,6 +38,7 @@ public class BookingController {
 	}
 
 	@PostMapping
+	@PreAuthorize("hasAnyRole('USER', 'ADMIN')")
 	public BookingDto create(
 			Authentication authentication, @Valid @RequestBody CreateBookingRequest req) {
 		var user = currentUserService.requireUser(authentication);

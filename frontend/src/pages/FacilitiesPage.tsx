@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Filter, MapPin, Pencil, Plus, Trash2, Users } from 'lucide-react'
+import { Filter, MapPin, Pencil, Plus, Trash2, Users, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { api } from '../api/client'
 import { useAuth } from '../auth/AuthContext'
@@ -26,6 +26,7 @@ export function FacilitiesPage() {
   const qc = useQueryClient()
 
   const isAdmin = user?.role === 'ADMIN'
+  console.log('[DEBUG] FacilitiesPage role:', user?.role, 'isAdmin:', isAdmin)
 
   const [type, setType] = useState<FacilityType | ''>('')
   const [minCap, setMinCap] = useState('')
@@ -91,6 +92,20 @@ export function FacilitiesPage() {
       invalidateFacilities()
       toast('Resource deleted successfully!', 'info')
     },
+    onError: (err: any) => {
+      const msg = err.response?.data?.message || 'Cannot delete resource. It might be referenced by bookings or tickets.'
+      toast(msg, 'error')
+    },
+  })
+
+  const deleteImageMut = useMutation({
+    mutationFn: async ({ fid, iid }: { fid: number; iid: number }) => {
+      await api.delete(`/api/v1/facilities/${fid}/images/${iid}`)
+    },
+    onSuccess: () => {
+      invalidateFacilities()
+      toast('Image removed.', 'info')
+    },
   })
 
   const uploadImages = async (facilityId: number, files: File[]) => {
@@ -132,6 +147,8 @@ export function FacilitiesPage() {
   const startEdit = (f: Facility) => {
     setEditingId(f.id)
     setShowForm(true)
+    // Ensure user sees the form at the top
+    document.querySelector('main')?.scrollTo({ top: 0, behavior: 'smooth' })
     setImageFiles(null)
     setForm({
       name: f.name,
@@ -166,7 +183,10 @@ export function FacilitiesPage() {
               setEditingId(null)
               setForm(emptyForm())
               setImageFiles(null)
-              setShowForm((v) => !v)
+              setShowForm((v) => {
+                if (!v) document.querySelector('main')?.scrollTo({ top: 0, behavior: 'smooth' })
+                return !v
+              })
             }}
           >
             <Plus className="h-4 w-4" />
@@ -250,7 +270,29 @@ export function FacilitiesPage() {
               />
             </div>
             <div className="md:col-span-2">
-              <label className="label">Resource images (optional, admin only)</label>
+              <label className="label">Current images</label>
+              {editingId && q.data?.find(f => f.id === editingId)?.images.length ? (
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {q.data.find(f => f.id === editingId)?.images.map(img => (
+                    <div key={img.id} className="relative group">
+                      <img 
+                        src={getFacilityImageUrl(img.url)} 
+                        className="h-16 w-16 rounded-lg object-cover border border-slate-700" 
+                      />
+                      <button
+                        type="button"
+                        className="absolute -top-1 -right-1 rounded-full bg-rose-500 p-0.5 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => deleteImageMut.mutate({ fid: editingId, iid: img.id })}
+                      >
+                        <X size={10} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-[10px] text-slate-500 mb-2 italic">No images uploaded yet.</p>
+              )}
+              <label className="label">Upload new images (optional)</label>
               <input
                 type="file"
                 className="input"
@@ -258,7 +300,7 @@ export function FacilitiesPage() {
                 multiple
                 onChange={(e) => setImageFiles(e.target.files)}
               />
-              <p className="mt-1 text-xs text-slate-400">Uploaded images appear on the facilities cards.</p>
+              <p className="mt-1 text-xs text-slate-400">Selected images will be added to the gallery.</p>
             </div>
           </div>
           {(createMut.isError || updateMut.isError) && (
@@ -348,7 +390,7 @@ export function FacilitiesPage() {
           <div key={f.id} className="card border-slate-100 transition-all hover:shadow-xl hover:shadow-black/5">
             {f.images.length > 0 && (
               <img
-                src={getFacilityImageUrl(f.images[0])}
+                src={getFacilityImageUrl(f.images[0].url)}
                 alt={`${f.name} image`}
                 className="mb-2 h-32 w-full rounded-md object-cover"
               />

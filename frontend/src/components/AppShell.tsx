@@ -19,8 +19,8 @@ import clsx from 'clsx'
 const nav = (role: Role) => {
   const base = [
     { to: '/app', label: 'Overview', icon: LayoutDashboard, roles: ['ADMIN', 'USER', 'TECHNICIAN'] as Role[] },
-    { to: '/app/facilities', label: 'Facilities', icon: Building2, roles: ['ADMIN', 'USER', 'TECHNICIAN'] as Role[] },
-    { to: '/app/bookings', label: 'Bookings', icon: CalendarDays, roles: ['ADMIN', 'USER', 'TECHNICIAN'] as Role[] },
+    { to: '/app/facilities', label: 'Facilities', icon: Building2, roles: ['ADMIN', 'USER'] as Role[] },
+    { to: '/app/bookings', label: 'Bookings', icon: CalendarDays, roles: ['ADMIN', 'USER'] as Role[] },
     { to: '/app/tickets', label: 'Tickets', icon: Ticket, roles: ['ADMIN', 'USER', 'TECHNICIAN'] as Role[] },
     { to: '/app/profile', label: 'Profile', icon: Users, roles: ['ADMIN', 'USER', 'TECHNICIAN'] as Role[] },
   ]
@@ -43,10 +43,10 @@ function MiniCalendar() {
 
   return (
     <div className="mt-auto rounded-2xl border border-white/5 bg-white/5 p-3">
-      <p className="mb-2 text-[9px] font-black uppercase tracking-[0.2em] text-white/40">{monthLabel}</p>
+      <p className="mb-2 text-[11px] font-black uppercase tracking-[0.2em] text-white/40">{monthLabel}</p>
       <div className="grid grid-cols-7 gap-y-0.5 text-center">
         {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
-          <div key={i} className="py-0.5 text-[8px] font-semibold text-white/20">{d}</div>
+          <div key={i} className="py-0.5 text-[10px] font-semibold text-white/20">{d}</div>
         ))}
         {Array.from({ length: firstDay }).map((_, i) => <div key={`off-${i}`} />)}
         {Array.from({ length: daysInMonth }).map((_, i) => {
@@ -55,7 +55,7 @@ function MiniCalendar() {
             <div
               key={d}
               className={clsx(
-                'py-0.5 text-[9px] font-medium transition-colors',
+                'py-0.5 text-[10px] font-medium transition-colors',
                 d === today
                   ? 'rounded-md bg-teal-500 font-bold text-white shadow-sm shadow-teal-500/30'
                   : 'text-white/40'
@@ -119,8 +119,8 @@ export function AppShell({ children }: { children: ReactNode }) {
               <img src="/logo.png" alt="CampusFlow" className="h-7 w-7 object-contain" />
             </div>
             <div className="flex flex-col">
-              <span className="text-[17px] font-black tracking-tight text-white leading-tight">CampusFlow</span>
-              <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-teal-400 opacity-80">Operations Hub</span>
+              <span className="text-[19px] font-black tracking-tight text-white leading-tight">CampusFlow</span>
+              <span className="text-[10.5px] font-bold uppercase tracking-[0.2em] text-teal-400 opacity-80">Operations Hub</span>
             </div>
           </div>
 
@@ -145,14 +145,14 @@ export function AppShell({ children }: { children: ReactNode }) {
               <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#0d1117] bg-emerald-500" />
             </div>
 
-            <p className="text-[12px] font-bold leading-tight text-white group-hover:text-teal-400 transition-colors">{user.fullName}</p>
-            <p className="mt-0.5 text-[10px] text-white/35 truncate w-full px-1">{user.email}</p>
+            <p className="text-[13px] font-bold leading-tight text-white group-hover:text-teal-400 transition-colors">{user.fullName}</p>
+            <p className="mt-0.5 text-[11px] text-white/35 truncate w-full px-1">{user.email}</p>
           </Link>
 
 
           {/* Navigation */}
           <nav className="flex flex-col gap-1 overflow-y-auto">
-            <p className="mb-1 px-2 text-[9px] font-semibold uppercase tracking-[0.15em] text-white/25">Main</p>
+            <p className="mb-2 px-2 text-[11px] font-semibold uppercase tracking-[0.15em] text-white/25">Main</p>
             {mainNavItems.map((it) => (
               <NavLink
                 key={it.to}
@@ -161,21 +161,21 @@ export function AppShell({ children }: { children: ReactNode }) {
                 onClick={() => setOpen(false)}
                 className={({ isActive }) =>
                   clsx(
-                    'flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[12.5px] font-semibold transition-all duration-200',
+                    'flex items-center gap-3 rounded-xl px-3 py-2.5 text-[14.5px] font-semibold transition-all duration-200',
                     isActive
                       ? 'border border-teal-500/20 bg-gradient-to-r from-teal-500/15 to-cyan-500/10 text-teal-300'
                       : 'text-white/40 hover:bg-white/5 hover:text-white/70',
                   )
                 }
               >
-                <it.icon className="h-4 w-4 flex-shrink-0" />
+                <it.icon className="h-[18px] w-[18px] flex-shrink-0" />
                 {it.label}
               </NavLink>
             ))}
 
             {adminNavItems.length > 0 && (
               <>
-                <p className="mb-1 mt-4 px-2 text-[9px] font-semibold uppercase tracking-[0.15em] text-white/25">System</p>
+                <p className="mb-2 mt-5 px-2 text-[11px] font-semibold uppercase tracking-[0.15em] text-white/25">System</p>
                 {adminNavItems.map((it) => (
                   <NavLink
                     key={it.to}
@@ -184,14 +184,14 @@ export function AppShell({ children }: { children: ReactNode }) {
                     onClick={() => setOpen(false)}
                     className={({ isActive }) =>
                       clsx(
-                        'flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[12.5px] font-semibold transition-all duration-200',
+                        'flex items-center gap-3 rounded-xl px-3 py-2.5 text-[14.5px] font-semibold transition-all duration-200',
                         isActive
                           ? 'border border-teal-500/20 bg-gradient-to-r from-teal-500/15 to-cyan-500/10 text-teal-300'
                           : 'text-white/40 hover:bg-white/5 hover:text-white/70',
                       )
                     }
                   >
-                    <it.icon className="h-4 w-4 flex-shrink-0" />
+                    <it.icon className="h-[18px] w-[18px] flex-shrink-0" />
                     {it.label}
                   </NavLink>
                 ))}

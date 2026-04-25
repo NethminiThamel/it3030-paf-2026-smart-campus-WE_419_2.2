@@ -9,4 +9,7 @@ public interface FacilityRepository extends JpaRepository<Facility, Long>, JpaSp
 
 	long countByStatus(FacilityStatus status);
 
+	@org.springframework.data.jpa.repository.Modifying
+	@org.springframework.data.jpa.repository.Query("UPDATE Facility f SET f.deleted = true WHERE f.id = :id")
+	void softDelete(Long id);
 }

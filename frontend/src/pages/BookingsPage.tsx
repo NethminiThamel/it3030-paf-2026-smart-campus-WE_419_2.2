@@ -122,58 +122,72 @@ export function BookingsPage() {
         <p className="text-sm font-medium text-slate-500">Request, approve, and manage bookings.</p>
       </div>
       <div className="grid gap-6 lg:grid-cols-2">
-        <div className="card border-slate-100">
-          <h2 className="mb-4 text-sm font-bold text-slate-800">New booking request</h2>
-          <div className="space-y-3">
-            <div>
-              <label className="label">Facility</label>
-              <select
-                className="input"
-                value={facilityId === '' ? '' : String(facilityId)}
-                onChange={(e) => setFacilityId(e.target.value ? Number(e.target.value) : '')}
+        {user?.role !== 'TECHNICIAN' ? (
+          <div className="card border-slate-100">
+            <h2 className="mb-4 text-sm font-bold text-slate-800">New booking request</h2>
+            <div className="space-y-3">
+              <div>
+                <label className="label">Facility</label>
+                <select
+                  className="input"
+                  value={facilityId === '' ? '' : String(facilityId)}
+                  onChange={(e) => setFacilityId(e.target.value ? Number(e.target.value) : '')}
+                >
+                  <option value="">Select…</option>
+                  {facilities.data?.map((f) => (
+                    <option key={f.id} value={f.id}>
+                      {f.name} · {f.location}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="label">Start</label>
+                  <input className="input" type="datetime-local" value={start} onChange={(e) => setStart(e.target.value)} />
+                </div>
+                <div>
+                  <label className="label">End</label>
+                  <input className="input" type="datetime-local" value={end} onChange={(e) => setEnd(e.target.value)} />
+                </div>
+              </div>
+              <div>
+                <label className="label">Purpose</label>
+                <input className="input" value={purpose} onChange={(e) => setPurpose(e.target.value)} />
+              </div>
+              <div>
+                <label className="label">Expected attendees</label>
+                <input className="input" value={attendees} onChange={(e) => setAttendees(e.target.value)} />
+              </div>
+              <button
+                type="button"
+                className="btn btn-primary w-full disabled:opacity-40"
+                disabled={!canCreate || create.isPending}
+                onClick={() => create.mutate()}
               >
-                <option value="">Select…</option>
-                {facilities.data?.map((f) => (
-                  <option key={f.id} value={f.id}>
-                    {f.name} · {f.location}
-                  </option>
-                ))}
-              </select>
+                Submit request
+              </button>
+              {create.isError && (
+                <p className="text-sm text-rose-500 font-bold">
+                  {(create.error as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+                    'Request failed'}
+                </p>
+              )}
             </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div>
-                <label className="label">Start</label>
-                <input className="input" type="datetime-local" value={start} onChange={(e) => setStart(e.target.value)} />
-              </div>
-              <div>
-                <label className="label">End</label>
-                <input className="input" type="datetime-local" value={end} onChange={(e) => setEnd(e.target.value)} />
-              </div>
-            </div>
-            <div>
-              <label className="label">Purpose</label>
-              <input className="input" value={purpose} onChange={(e) => setPurpose(e.target.value)} />
-            </div>
-            <div>
-              <label className="label">Expected attendees</label>
-              <input className="input" value={attendees} onChange={(e) => setAttendees(e.target.value)} />
-            </div>
-            <button
-              type="button"
-              className="btn btn-primary w-full disabled:opacity-40"
-              disabled={!canCreate || create.isPending}
-              onClick={() => create.mutate()}
-            >
-              Submit request
-            </button>
-            {create.isError && (
-              <p className="text-sm text-rose-500 font-bold">
-                {(create.error as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-                  'Request failed'}
-              </p>
-            )}
           </div>
-        </div>
+        ) : (
+          <div className="card border-slate-100 bg-slate-50 flex items-center justify-center text-center p-8">
+            <div>
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-teal-600 shadow-sm ring-1 ring-slate-100">
+                <QrCode className="h-6 w-6" />
+              </div>
+              <h3 className="text-sm font-bold text-slate-800">Booking Management</h3>
+              <p className="mt-1 text-xs font-medium text-slate-500 max-w-[200px]">
+                Technicians can oversee and verify campus bookings but cannot initiate new requests.
+              </p>
+            </div>
+          </div>
+        )}
         <div className="card border-slate-100">
           <h2 className="mb-4 flex items-center gap-2 text-sm font-bold text-slate-800">
             <QrCode className="h-4 w-4 text-teal-600" /> Booking QR

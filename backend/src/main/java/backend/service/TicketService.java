@@ -162,11 +162,33 @@ public class TicketService {
 			if (req.status() != null) {
 				technicianStatusUpdate(t, req.status(), req.resolutionNote(), actor);
 			}
+		} else if (actor.getRole() == Role.USER) {
+			if (!t.getReporter().getId().equals(actor.getId())) {
+				throw new ApiException(HttpStatus.FORBIDDEN, "Not your ticket");
+			}
+			if (req.status() == TicketStatus.CLOSED && t.getStatus() == TicketStatus.OPEN) {
+				t.setStatus(TicketStatus.CLOSED);
+				addHistory(t, actor, "CLOSED", "Ticket closed by reporter");
+			} else {
+				throw new ApiException(HttpStatus.BAD_REQUEST, "Reporters can only close open tickets");
+			}
 		} else {
 			throw new ApiException(HttpStatus.FORBIDDEN, "Insufficient permissions");
 		}
 		t.setUpdatedAt(Instant.now());
 		return loadDto(id);
+	}
+
+	@Transactional
+	public void delete(AppUser actor, Long id) {
+		Ticket t = getEntity(id);
+		if (actor.getRole() != Role.ADMIN && !t.getReporter().getId().equals(actor.getId())) {
+			throw new ApiException(HttpStatus.FORBIDDEN, "Forbidden");
+		}
+		if (actor.getRole() != Role.ADMIN && t.getStatus() != TicketStatus.OPEN) {
+			throw new ApiException(HttpStatus.BAD_REQUEST, "Can only delete open tickets");
+		}
+		ticketRepository.delete(t);
 	}
 
 	private void technicianStatusUpdate(

@@ -15,9 +15,11 @@ import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -44,16 +46,12 @@ public class TicketController {
 	}
 
 	@PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	@PreAuthorize("hasAnyRole('USER', 'ADMIN')")
 	public TicketDto create(
 			Authentication authentication,
-			@RequestParam(required = false) Long facilityId,
-			@RequestParam String category,
-			@RequestParam String description,
-			@RequestParam TicketPriority priority,
-			@RequestParam String contactEmail,
+			@Valid @ModelAttribute CreateTicketRequest req,
 			@RequestParam(value = "files", required = false) List<MultipartFile> files) {
 		var user = currentUserService.requireUser(authentication);
-		var req = new CreateTicketRequest(facilityId, category, description, priority, contactEmail);
 		return ticketService.create(user, req, files);
 	}
 
@@ -125,6 +123,12 @@ public class TicketController {
 			@PathVariable Long commentId) {
 		var user = currentUserService.requireUser(authentication);
 		ticketService.deleteComment(user, id, commentId);
+	}
+
+	@DeleteMapping("/{id}")
+	public void delete(Authentication authentication, @PathVariable Long id) {
+		var user = currentUserService.requireUser(authentication);
+		ticketService.delete(user, id);
 	}
 }
 

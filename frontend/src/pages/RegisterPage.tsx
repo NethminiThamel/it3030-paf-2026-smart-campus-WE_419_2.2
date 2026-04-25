@@ -36,10 +36,10 @@ export function RegisterPage() {
   const handleRegister = async () => {
     setTouched({ fullName: true, email: true, password: true })
     if (!isNameValid || !isEmailValid || password.length < 8) {
-       setError('Please fix the validation errors above.')
-       return
+      setError('Please fix the validation errors above.')
+      return
     }
-    
+
     setError(null)
     setBusy(true)
     try {
@@ -72,23 +72,23 @@ export function RegisterPage() {
       </div>
 
       <div className="flex w-full max-w-[768px] overflow-hidden rounded-[2rem] bg-[#161b22] shadow-2xl shadow-black/50 border border-white/5 relative z-10 my-10">
-        
+
         {/* Left Side: Toggle Panel */}
         <div className="hidden flex-1 flex-col items-center justify-center bg-[#0d1117] p-12 text-center text-white sm:flex relative overflow-hidden border-r border-white/5">
-           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-[#14b8a6]/10 rounded-full blur-[80px]" />
-           
-           <div className="relative z-10 space-y-6">
-              <h2 className="text-3xl font-black">Welcome Back!</h2>
-              <p className="text-sm font-medium leading-relaxed text-slate-400">
-                To keep connected with us please login with your personal info.
-              </p>
-              <Link
-                to="/"
-                className="inline-flex h-11 items-center rounded-xl border border-white/20 bg-white/5 px-10 text-[11px] font-black uppercase tracking-widest transition-all hover:bg-white hover:text-black"
-              >
-                Sign In
-              </Link>
-           </div>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-[#14b8a6]/10 rounded-full blur-[80px]" />
+
+          <div className="relative z-10 space-y-6">
+            <h2 className="text-3xl font-black">Welcome Back!</h2>
+            <p className="text-sm font-medium leading-relaxed text-slate-400">
+              To keep connected with us please login with your personal info.
+            </p>
+            <Link
+              to="/"
+              className="inline-flex h-11 items-center rounded-xl border border-white/20 bg-white/5 px-10 text-[11px] font-black uppercase tracking-widest transition-all hover:bg-white hover:text-black"
+            >
+              Sign In
+            </Link>
+          </div>
         </div>
 
         {/* Right Side: Form */}
@@ -115,7 +115,7 @@ export function RegisterPage() {
                 value={fullName}
                 onChange={(e) => {
                   setFullName(e.target.value.replace(/[^A-Za-z\s]/g, ''))
-                  if(!touched.fullName) setTouched(p => ({...p, fullName: true}))
+                  if (!touched.fullName) setTouched(p => ({ ...p, fullName: true }))
                 }}
                 onBlur={() => setTouched(p => ({ ...p, fullName: true }))}
               />
@@ -131,7 +131,7 @@ export function RegisterPage() {
                 value={email}
                 onChange={(e) => {
                   setEmail(e.target.value)
-                  if(!touched.email) setTouched(p => ({...p, email: true}))
+                  if (!touched.email) setTouched(p => ({ ...p, email: true }))
                 }}
                 onBlur={() => setTouched(p => ({ ...p, email: true }))}
               />
@@ -139,7 +139,7 @@ export function RegisterPage() {
             </div>
 
             <div className="space-y-1">
-              <label className={`ml-1 text-[10px] font-black uppercase tracking-widest transition-colors ${touched.password && !isPasswordValid ? 'text-red-500' : 'text-[#14b8a6]'}`}>Hub Passcode</label>
+              <label className={`ml-1 text-[10px] font-black uppercase tracking-widest transition-colors ${touched.password && !isPasswordValid ? 'text-red-500' : 'text-[#14b8a6]'}`}>Password</label>
               <div className="relative">
                 <input
                   type={showPass ? 'text' : 'password'}
@@ -148,7 +148,7 @@ export function RegisterPage() {
                   value={password}
                   onChange={(e) => {
                     setPassword(e.target.value)
-                    if(!touched.password) setTouched(p => ({...p, password: true}))
+                    if (!touched.password) setTouched(p => ({ ...p, password: true }))
                   }}
                   onBlur={() => setTouched(p => ({ ...p, password: true }))}
                 />
@@ -164,34 +164,41 @@ export function RegisterPage() {
               onClick={handleRegister}
               className={`mt-2 h-12 w-full rounded-xl text-sm font-black uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed ${busy || !fullName.trim() || !email.trim() || password.length < 8 || !isLettersOnly ? 'bg-slate-800 text-slate-500 border border-white/5 shadow-none' : 'bg-[#14b8a6] text-white shadow-lg shadow-[#14b8a6]/20 hover:bg-[#0d9488]'}`}
             >
-              {busy ? 'Creating Hub...' : 'Establish Connection'}
+              {busy ? 'Creating Hub...' : 'Create Account'}
             </button>
           </div>
 
           {isGoogleClientConfigured() && (
-            <div className="mt-8 flex flex-col items-center">
-               <span className="mb-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-600">Workspace Onboarding</span>
-               <div className="w-full max-w-[340px] [&>div]:!w-full [&>div>div]:!w-full [&_iframe]:!w-full">
-                 <GoogleLogin
-                   onSuccess={async (cred) => {
-                     if (!cred.credential) return
-                     setBusy(true)
-                     setToken(cred.credential)
-                     const { ok, detail } = await refresh()
-                     setBusy(false)
-                     if (ok) {
-                        toast('Welcome to CampusFlow!', 'success')
-                        navigate('/app', { replace: true })
-                     } else {
-                        setError(detail ?? 'Google SSO failed.')
-                     }
-                   }}
-                   onError={() => setError('Google sign-in could not be opened.')}
-                   theme="filled_black"
-                   shape="pill"
-                   width="340"
-                 />
-               </div>
+            <div className="mt-8 flex flex-col items-center border-t border-white/5 pt-8">
+              <div className="mb-6 text-center space-y-1">
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#14b8a6]">Instant Onboarding</span>
+                <p className="text-[11px] font-bold text-slate-400">
+                  Join with your organization account instantly.
+                </p>
+                <p className="text-[9px] font-medium text-slate-600 uppercase tracking-widest mt-1">Single Sign-On Integration</p>
+              </div>
+              <div className="w-full max-w-[340px] [&>div]:!w-full [&>div>div]:!w-full [&_iframe]:!w-full">
+                <GoogleLogin
+                  onSuccess={async (cred) => {
+                    if (!cred.credential) return
+                    setBusy(true)
+                    setToken(cred.credential)
+                    const { ok, detail } = await refresh()
+                    setBusy(false)
+                    if (ok) {
+                      toast('Welcome to CampusFlow!', 'success')
+                      navigate('/app', { replace: true })
+                    } else {
+                      setError(detail ?? 'Google SSO failed.')
+                    }
+                  }}
+                  onError={() => setError('Google sign-in could not be opened.')}
+                  theme="filled_black"
+                  shape="pill"
+                  width="340"
+                  text="signup_with"
+                />
+              </div>
             </div>
           )}
         </div>
