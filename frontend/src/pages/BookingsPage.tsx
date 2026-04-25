@@ -26,7 +26,7 @@ export function BookingsPage() {
   const [start, setStart] = useState('')
   const [end, setEnd] = useState('')
   const [purpose, setPurpose] = useState('')
-  const [attendees, setAttendees] = useState('30')
+  const [attendees, setAttendees] = useState('')
 
   const facilities = useQuery({
     queryKey: ['facilities-all'],
@@ -54,8 +54,15 @@ export function BookingsPage() {
       toast('Booking request submitted!', 'success')
       setPurpose('')
       setFacilityId('')
+      setAttendees('')
     },
   })
+
+  const selectedFacility = useMemo(
+    () => (facilityId === '' ? undefined : facilities.data?.find((f) => f.id === facilityId)),
+    [facilities.data, facilityId],
+  )
+  const maxAttendees = selectedFacility?.capacity
 
 
   const decide = useMutation({
@@ -99,10 +106,13 @@ export function BookingsPage() {
     },
   })
 
-  const canCreate = useMemo(
-    () => facilityId && start && end && purpose && attendees,
-    [facilityId, start, end, purpose, attendees],
-  )
+  const canCreate = useMemo(() => {
+    if (!facilityId || !start || !end || !purpose || !attendees) return false
+    const n = Number(attendees)
+    if (!Number.isFinite(n) || n < 1) return false
+    if (maxAttendees != null && n > maxAttendees) return false
+    return true
+  }, [facilityId, start, end, purpose, attendees, maxAttendees])
 
   const passUrl = qrData.data?.passUrl ?? ''
   const summaryText = qrData.data?.qrText ?? ''
@@ -122,12 +132,15 @@ export function BookingsPage() {
               <select
                 className="input"
                 value={facilityId === '' ? '' : String(facilityId)}
-                onChange={(e) => setFacilityId(e.target.value ? Number(e.target.value) : '')}
+                onChange={(e) => {
+                  setFacilityId(e.target.value ? Number(e.target.value) : '')
+                  setAttendees('')
+                }}
               >
                 <option value="">Select…</option>
                 {facilities.data?.map((f) => (
                   <option key={f.id} value={f.id}>
-                    {f.name} · {f.location}
+                    {f.name} · {f.location} (cap. {f.capacity})
                   </option>
                 ))}
               </select>
@@ -147,8 +160,46 @@ export function BookingsPage() {
               <input className="input" value={purpose} onChange={(e) => setPurpose(e.target.value)} />
             </div>
             <div>
-              <label className="label">Expected attendees</label>
-              <input className="input" value={attendees} onChange={(e) => setAttendees(e.target.value)} />
+              <label className="label">
+                Expected attendees
+                {maxAttendees != null && (
+                  <span className="ml-2 text-[11px] font-bold text-slate-400">
+                    (max {maxAttendees})
+                  </span>
+                )}
+              </label>
+              <input
+                className="input"
+                type="number"
+                min={1}
+                max={maxAttendees}
+                disabled={facilityId === ''}
+                placeholder={
+                  facilityId === ''
+                    ? 'Select a facility first'
+                    : `1 – ${maxAttendees ?? ''}`
+                }
+                value={attendees}
+                onChange={(e) => {
+                  const raw = e.target.value
+                  if (raw === '') {
+                    setAttendees('')
+                    return
+                  }
+                  const n = Number(raw)
+                  if (Number.isNaN(n)) return
+                  if (maxAttendees != null && n > maxAttendees) {
+                    setAttendees(String(maxAttendees))
+                    return
+                  }
+                  setAttendees(raw)
+                }}
+              />
+              {maxAttendees != null && Number(attendees) > maxAttendees && (
+                <p className="mt-1 text-[11px] font-bold text-rose-500">
+                  Cannot exceed facility capacity ({maxAttendees}).
+                </p>
+              )}
             </div>
             <button
               type="button"
