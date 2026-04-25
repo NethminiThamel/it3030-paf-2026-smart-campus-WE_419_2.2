@@ -169,8 +169,14 @@ export function RegisterPage() {
           </div>
 
           {isGoogleClientConfigured() && (
-            <div className="mt-8 flex flex-col items-center">
-              <span className="mb-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-600">Workspace Onboarding</span>
+            <div className="mt-8 flex flex-col items-center border-t border-white/5 pt-8">
+              <div className="mb-6 text-center space-y-1">
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#14b8a6]">Instant Onboarding</span>
+                <p className="text-[11px] font-bold text-slate-400">
+                  Join with your organization account instantly.
+                </p>
+                <p className="text-[9px] font-medium text-slate-600 uppercase tracking-widest mt-1">Single Sign-On Integration</p>
+              </div>
               <div className="w-full max-w-[340px] [&>div]:!w-full [&>div>div]:!w-full [&_iframe]:!w-full">
                 <GoogleLogin
                   onSuccess={async (cred) => {
@@ -190,6 +196,7 @@ export function RegisterPage() {
                   theme="filled_black"
                   shape="pill"
                   width="340"
+                  text="signup_with"
                 />
               </div>
             </div>

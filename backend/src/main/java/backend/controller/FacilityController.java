@@ -82,4 +82,13 @@ public class FacilityController {
 		// Endpoint uses multipart/form-data (files part).
 		return facilityService.uploadImages(id, files);
 	}
+	@DeleteMapping("/{facilityId}/images/{imageId}")
+	@PreAuthorize("hasRole('ADMIN')")
+	public void deleteImage(
+			Authentication authentication,
+			@PathVariable Long facilityId,
+			@PathVariable Long imageId) {
+		currentUserService.requireUser(authentication);
+		facilityService.deleteImage(facilityId, imageId);
+	}
 }
