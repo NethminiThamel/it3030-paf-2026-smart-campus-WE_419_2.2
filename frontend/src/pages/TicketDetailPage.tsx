@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { api } from '../api/client'
 import { useAuth } from '../auth/AuthContext'
 import type { Ticket, TicketStatus } from '../types'
@@ -15,6 +15,7 @@ function ticketAttachmentUrl(storedFilename: string) {
 
 export function TicketDetailPage() {
   const { id } = useParams()
+  const navigate = useNavigate()
   const ticketId = Number(id)
   const { user } = useAuth()
   const qc = useQueryClient()
@@ -159,6 +160,37 @@ export function TicketDetailPage() {
     },
   })
 
+  const cancelTicket = useMutation({
+    mutationFn: async () =>
+      (
+        await api.patch<Ticket>(`/api/v1/tickets/${ticketId}`, {
+          status: 'CLOSED',
+        })
+      ).data,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['ticket', ticketId] })
+      qc.invalidateQueries({ queryKey: ['tickets'] })
+      toast('Ticket cancelled successfully', 'info')
+    },
+    onError: (err: any) => {
+      const msg = err.response?.data?.message || 'Failed to cancel ticket'
+      toast(msg, 'error')
+    },
+  })
+
+  const deleteTicket = useMutation({
+    mutationFn: async () => api.delete(`/api/v1/tickets/${ticketId}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['tickets'] })
+      toast('Ticket deleted successfully', 'success')
+      navigate('/app/tickets')
+    },
+    onError: (err: any) => {
+      const msg = err.response?.data?.message || 'Failed to delete ticket'
+      toast(msg, 'error')
+    },
+  })
+
   useEffect(() => {
     const d = ticket.data
     if (!d) return
@@ -283,7 +315,7 @@ export function TicketDetailPage() {
               >
                 Update Assignment
               </button>
-              
+
               <div className="pt-4 border-t border-slate-100">
                 <label className="label">Force Status</label>
                 <select
@@ -365,115 +397,71 @@ export function TicketDetailPage() {
                 Not assigned to you. Admin review is needed.
               </p>
             ))}
-        </div>
-      </div>
-
-      <div className="card border-slate-100">
-        <h2 className="mb-4 text-sm font-bold text-slate-800 uppercase tracking-wider">Communication Note</h2>
-        <div className="mb-6 space-y-4">
-          {comments.data?.map((c) => {
-            const isMine = c.userEmail === user?.email
-            const canEdit = user?.role === 'ADMIN' || isMine
-
-            return (
-              <div
-                key={c.id}
-                className={clsx(
-                  "rounded-2xl border p-4 transition-all duration-300",
-                  isMine ? "bg-slate-50/80 border-slate-100 ml-8" : "bg-white border-slate-100 shadow-sm mr-8"
-                )}
-              >
-                <div className="flex items-center justify-between text-[11px] font-bold mb-3">
-                  <span className="text-slate-400">{c.userEmail} {isMine && '(You)'}</span>
-                  <span className="text-slate-400 opacity-60">{format(new Date(c.createdAt), 'PPp')}</span>
-                </div>
-                {editingCommentId === c.id ? (
-                  <div className="space-y-3">
-                    <textarea
-                      className="input min-h-[100px] font-medium"
-                      value={editingCommentBody}
-                      onChange={(e) => setEditingCommentBody(e.target.value)}
-                    />
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        className="btn btn-primary h-9 px-4 text-xs font-bold"
-                        disabled={!editingCommentBody.trim() || editComment.isPending}
-                        onClick={() =>
-                          editComment.mutate({ commentId: c.id, body: editingCommentBody })
-                        }
-                      >
-                        Save Changes
-                      </button>
-                      <button
-                        type="button"
-                        className="btn btn-ghost h-9 px-4 text-xs font-bold"
-                        onClick={() => {
-                          setEditingCommentId(null)
-                          setEditingCommentBody('')
-                        }}
-                      >
-                        Cancel
-                      </button>
+          {user?.role === 'USER' && (
+            <div className="space-y-4">
+              {t.status === 'OPEN' ? (
+                <>
+                  <p className="text-[11px] font-bold text-slate-400 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                    If this issue is no longer relevant, you can cancel your request.
+                  </p>
+                  <button
+                    type="button"
+                    className="btn btn-ghost w-full h-11 font-bold border-rose-100 text-rose-500 hover:bg-rose-50"
+                    disabled={cancelTicket.isPending}
+                    onClick={() => {
+                      if (window.confirm('Are you sure you want to cancel this ticket?')) {
+                        cancelTicket.mutate()
+                      }
+                    }}
+                  >
+                    {cancelTicket.isPending ? 'Cancelling...' : 'Cancel Ticket'}
+                  </button>
+                </>
+              ) : (
+                <div className="p-4 rounded-xl border border-slate-100 bg-slate-50">
+                  <p className="text-xs font-bold text-slate-500 mb-1 capitalize">Ticket is {t.status.toLowerCase().replace('_', ' ')}</p>
+                  <p className="text-[10px] font-medium text-slate-400 leading-relaxed mb-3">
+                    {t.status === 'IN_PROGRESS' 
+                      ? 'A technician has been assigned and is currently working on your request. You will be notified of any updates.' 
+                      : t.status === 'RESOLVED' 
+                        ? 'The issue has been marked as fixed. Please verify the resolution.' 
+                        : 'This ticket is now closed. If you have further issues, please open a new ticket.'}
+                  </p>
+                  <div className="pt-3 border-t border-slate-200/50 space-y-2">
+                    <div>
+                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Assigned Technician</p>
+                      <p className="text-[10px] font-bold text-slate-700">{t.assignedTechnicianEmail || 'Pending Assignment'}</p>
+                    </div>
+                    <div>
+                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Expected Resolution</p>
+                      <p className="text-[10px] font-bold text-slate-700">24–48 Business Hours</p>
+                    </div>
+                    <div>
+                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Support Contact</p>
+                      <p className="text-[10px] font-bold text-teal-600">ops-support@campusflow.edu</p>
                     </div>
                   </div>
-                ) : (
-                  <>
-                    <div className="text-sm font-medium text-slate-700 leading-relaxed whitespace-pre-wrap">{c.body}</div>
-                    {canEdit && (
-                      <div className="mt-4 flex gap-3 pt-3 border-t border-slate-100">
-                        <button
-                          type="button"
-                          className="text-[10px] font-black uppercase tracking-widest text-[#101924] hover:text-teal-600 transition"
-                          onClick={() => {
-                            setEditingCommentId(c.id)
-                            setEditingCommentBody(c.body)
-                          }}
-                        >
-                          Modify
-                        </button>
-                        <button
-                          type="button"
-                          className="text-[10px] font-black uppercase tracking-widest text-rose-500 hover:text-rose-700 transition"
-                          disabled={deleteComment.isPending}
-                          onClick={() => {
-                            if (window.confirm(`Delete this comment?`)) {
-                              deleteComment.mutate(c.id)
-                            }
-                          }}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-            )
-          })}
-          {comments.data?.length === 0 && <p className="text-sm font-medium text-slate-400 italic py-4">No comments on this ticket yet.</p>}
+                </div>
+              )}
+              {(user?.role === 'ADMIN' || (user?.email === t.reporterEmail && t.status === 'OPEN')) && (
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    className="btn btn-ghost w-full h-10 font-bold border-rose-100 text-rose-500 hover:bg-rose-50 text-[10px]"
+                    disabled={deleteTicket.isPending}
+                    onClick={() => {
+                      if (window.confirm('PERMANENTLY delete this ticket and all its data?')) {
+                        deleteTicket.mutate()
+                      }
+                    }}
+                  >
+                    {deleteTicket.isPending ? 'Deleting...' : 'Delete Ticket'}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
-        <div className="flex gap-3">
-          <input className="input font-medium" value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Add a note or update…" />
-          <button type="button" className="btn btn-primary px-8 font-bold" onClick={() => addComment.mutate()} disabled={!comment}>
-            Send
-          </button>
-        </div>
-      </div>
-      <div className="card border-slate-100">
-        <h2 className="mb-4 text-sm font-bold text-slate-800 uppercase tracking-wider">Audit Trail</h2>
-        <ul className="space-y-3">
-          {history.data?.map((h) => (
-            <li key={h.id} className="rounded-xl border border-slate-50 bg-slate-50/50 px-4 py-3">
-              <div className="flex flex-wrap items-center gap-x-3 text-[11px] font-bold">
-                <span className="text-slate-400">{format(new Date(h.createdAt), 'PPp')}</span>
-                <span className="text-teal-600">{h.actorEmail}</span>
-                <span className="text-slate-900 uppercase tracking-tighter">{h.action}</span>
-              </div>
-              {h.detail && <div className="mt-2 text-xs font-medium text-slate-600 leading-relaxed">{h.detail}</div>}
-            </li>
-          ))}
-        </ul>
       </div>
     </div>
   )

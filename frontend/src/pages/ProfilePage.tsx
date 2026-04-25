@@ -76,8 +76,8 @@ export function ProfilePage() {
     if (file) uploadPhoto.mutate(file)
   }
 
-  const imageUrl = user.profilePicture 
-    ? `${import.meta.env.VITE_API_BASE}${user.profilePicture}` 
+  const imageUrl = user.profilePicture
+    ? `${import.meta.env.VITE_API_BASE}${user.profilePicture}`
     : null
 
   return (
@@ -102,7 +102,7 @@ export function ProfilePage() {
                 initials
               )}
             </div>
-            
+
             <label className="absolute -bottom-2 -right-2 flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl bg-slate-900 text-white shadow-lg ring-4 ring-[#0d1117] transition hover:scale-110 active:scale-95">
               <Camera className="h-4 w-4" />
               <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
