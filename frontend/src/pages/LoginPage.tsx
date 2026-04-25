@@ -118,8 +118,14 @@ export function LoginPage() {
           </div>
 
           {isGoogleClientConfigured() && (
-            <div className="mt-8 flex flex-col items-center">
-              <span className="mb-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-600">Workspace Login</span>
+            <div className="mt-8 flex flex-col items-center border-t border-white/5 pt-8">
+              <div className="mb-6 text-center space-y-1">
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#14b8a6]">Identity Verification</span>
+                <p className="text-[11px] font-bold text-slate-400">
+                  Already a user? <span className="text-white">Sign In</span>. New here? <span className="text-white">Sign Up</span>.
+                </p>
+                <p className="text-[9px] font-medium text-slate-600 uppercase tracking-widest mt-1">Workspace Authentication</p>
+              </div>
               <div className="w-full max-w-[340px] [&>div]:!w-full [&>div>div]:!w-full [&_iframe]:!w-full">
                 <GoogleLogin
                   onSuccess={async (cred) => {
@@ -129,7 +135,7 @@ export function LoginPage() {
                     const { ok, detail } = await refresh()
                     setBusy(false)
                     if (ok) {
-                      toast('Signed in via Google', 'success')
+                      toast('Authenticated via Workspace SSO', 'success')
                       navigate('/app', { replace: true })
                     } else {
                       setError(detail ?? 'Google authentication failed.')
@@ -139,6 +145,7 @@ export function LoginPage() {
                   theme="filled_black"
                   shape="pill"
                   width="340"
+                  text="continue_with"
                 />
               </div>
             </div>
