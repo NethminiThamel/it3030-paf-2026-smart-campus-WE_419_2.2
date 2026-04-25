@@ -50,4 +50,7 @@ public class AppUser {
 	@Column(name = "created_at", nullable = false)
 	private Instant createdAt;
 
+	@Builder.Default
+	@Column(nullable = false)
+	private Boolean deleted = false;
 }

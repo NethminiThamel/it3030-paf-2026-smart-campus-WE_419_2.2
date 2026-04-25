@@ -37,6 +37,15 @@ public class FacilityImageStorageService {
 		return new StoredFacilityImage(name, original != null ? original : "file", file.getContentType());
 	}
 
+	public void delete(String storedFilename) {
+		try {
+			Files.deleteIfExists(root.resolve(storedFilename));
+		} catch (IOException e) {
+			// Log and continue, not a critical failure for the user
+			System.err.println("Could not delete file: " + storedFilename);
+		}
+	}
+
 	public record StoredFacilityImage(String storedFilename, String originalFilename, String contentType) {}
 }
 

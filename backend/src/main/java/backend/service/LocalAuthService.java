@@ -41,6 +41,9 @@ public class LocalAuthService {
 		Optional<AppUser> existingOpt = appUserRepository.findByEmailIgnoreCase(email);
 		if (existingOpt.isPresent()) {
 			AppUser existing = existingOpt.get();
+			if (Boolean.TRUE.equals(existing.getDeleted())) {
+				throw new ApiException(HttpStatus.FORBIDDEN, "This account has been deactivated and cannot be re-registered.");
+			}
 			if (existing.getPasswordHash() != null) {
 				throw new ApiException(
 						HttpStatus.CONFLICT,
@@ -89,6 +92,9 @@ public class LocalAuthService {
 				appUserRepository
 						.findByEmailIgnoreCase(email)
 						.orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "Invalid email or password"));
+		if (Boolean.TRUE.equals(user.getDeleted())) {
+			throw new ApiException(HttpStatus.FORBIDDEN, "Account has been deactivated");
+		}
 		if (user.getPasswordHash() == null) {
 			throw new ApiException(
 					HttpStatus.UNAUTHORIZED,
@@ -96,6 +102,12 @@ public class LocalAuthService {
 		}
 		if (!passwordEncoder.matches(req.password(), user.getPasswordHash())) {
 			throw new ApiException(HttpStatus.UNAUTHORIZED, "Invalid email or password");
+		}
+		// Refresh role in case config changed
+		Role desiredRole = resolveInitialRole(email);
+		if (user.getRole() != desiredRole) {
+			user.setRole(desiredRole);
+			user = appUserRepository.save(user);
 		}
 		return new AuthTokenResponse(localJwtService.createAccessToken(user));
 	}
