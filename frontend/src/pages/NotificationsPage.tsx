@@ -103,7 +103,11 @@ export function NotificationsPage() {
         <div className="flex items-center gap-2">
           {readCount > 0 && (
             <button
-              onClick={() => clearRead.mutate()}
+              onClick={() => {
+                if (window.confirm('Are you sure you want to clear all read notifications?')) {
+                  clearRead.mutate()
+                }
+              }}
               className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-[11px] font-bold uppercase tracking-wider text-red-400 shadow-sm transition hover:bg-red-50 hover:border-red-100 active:scale-95"
             >
               <Trash2 className="h-3 w-3" />
@@ -146,7 +150,12 @@ export function NotificationsPage() {
               styles={getCategoryStyles(n.category, n.title)}
               onClick={() => handleNotificationClick(n)}
               onMarkRead={(e) => { e.stopPropagation(); markRead.mutate(n.id) }}
-              onDelete={(e) => { e.stopPropagation(); deleteNotification.mutate(n.id) }}
+                onDelete={(e) => {
+                  e.stopPropagation()
+                  if (window.confirm('Are you sure you want to delete this notification?')) {
+                    deleteNotification.mutate(n.id)
+                  }
+                }}
             />
           ))}
         </div>
@@ -163,7 +172,12 @@ export function NotificationsPage() {
               styles={getCategoryStyles(n.category, n.title)}
               onClick={() => handleNotificationClick(n)}
               onMarkRead={(e) => { e.stopPropagation(); markRead.mutate(n.id) }}
-              onDelete={(e) => { e.stopPropagation(); deleteNotification.mutate(n.id) }}
+                onDelete={(e) => {
+                  e.stopPropagation()
+                  if (window.confirm('Are you sure you want to delete this notification?')) {
+                    deleteNotification.mutate(n.id)
+                  }
+                }}
             />
           ))}
         </div>
