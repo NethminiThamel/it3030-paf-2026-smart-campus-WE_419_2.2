@@ -113,13 +113,25 @@ export function BookingsPage() {
     },
   })
 
+  const minStart = useMemo(() => {
+    const now = new Date()
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset())
+    return now.toISOString().slice(0, 16)
+  }, [])
+
+  const minEnd = useMemo(() => {
+    return start && start >= minStart ? start : minStart
+  }, [start, minStart])
+
   const canCreate = useMemo(() => {
     if (!facilityId || !start || !end || !purpose || !attendees) return false
+    if (start < minStart) return false
+    if (end < start) return false
     const n = Number(attendees)
     if (!Number.isFinite(n) || n < 1) return false
     if (maxAttendees != null && n > maxAttendees) return false
     return true
-  }, [facilityId, start, end, purpose, attendees, maxAttendees])
+  }, [facilityId, start, end, purpose, attendees, maxAttendees, minStart])
 
   const passUrl = qrData.data?.passUrl ?? ''
   const summaryText = qrData.data?.qrText ?? ''
@@ -155,11 +167,30 @@ export function BookingsPage() {
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
                 <label className="label">Start</label>
-                <input className="input" type="datetime-local" value={start} onChange={(e) => setStart(e.target.value)} />
+                <input
+                  className="input"
+                  type="datetime-local"
+                  min={minStart}
+                  value={start}
+                  onChange={(e) => {
+                    const value = e.target.value
+                    setStart(value)
+                    if (end && value && end < value) {
+                      setEnd('')
+                    }
+                  }}
+                />
               </div>
               <div>
                 <label className="label">End</label>
-                <input className="input" type="datetime-local" value={end} onChange={(e) => setEnd(e.target.value)} />
+                <input
+                  className="input"
+                  type="datetime-local"
+                  min={minEnd}
+                  disabled={!start}
+                  value={end}
+                  onChange={(e) => setEnd(e.target.value)}
+                />
               </div>
             </div>
             <div>
