@@ -45,8 +45,9 @@ A comprehensive Smart Campus management system built with a robust Spring Boot b
 ### 1. Database Setup
 1. Create a MySQL database 
    CREATE DATABASE (name of database);
+    CREATE DATABASE campusflow;
    ```
-2. Ensure your MySQL server is running on `localhost:3306`.
+3. Ensure your MySQL server is running on `localhost:3306`.
 
 ### 2. Backend Configuration
 1. Navigate to the `backend` directory:
