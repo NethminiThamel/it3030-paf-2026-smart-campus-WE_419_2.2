@@ -1,4 +1,4 @@
-# CampusFlow Platform 🎓
+# Smart Campus Platform 🎓
 
 A comprehensive Smart Campus management system built with a robust Spring Boot backend and a modern React frontend. This platform streamlines campus operations, facility bookings, event management, and student/staff interactions.
 
@@ -28,6 +28,7 @@ A comprehensive Smart Campus management system built with a robust Spring Boot b
 ### Frontend
 - **Framework**: React 19 (Vite)
 - **Styling**: Tailwind CSS 4
+- **State Management**: TanStack Query (React Query)
 - **Icons & Charts**: Lucide React, Recharts
 - **HTTP Client**: Axios
 - **Authentication**: React OAuth Google
@@ -43,11 +44,11 @@ A comprehensive Smart Campus management system built with a robust Spring Boot b
 - **Maven**: (Optional, if not using the provided wrapper)
 
 ### 1. Database Setup
-1. Create a MySQL database 
-   CREATE DATABASE (name of database);
-    CREATE DATABASE campusflow;
+1. Create a MySQL database named `campusflow`:
+   ```sql
+   CREATE DATABASE campusflow;
    ```
-3. Ensure your MySQL server is running on `localhost:3306`.
+2. Ensure your MySQL server is running on `localhost:3306`.
 
 ### 2. Backend Configuration
 1. Navigate to the `backend` directory:
@@ -112,4 +113,6 @@ smart-campus/
 
 ---
 
+## 📄 License
 
+Distributed under the MIT License. See `LICENSE` for more information.
